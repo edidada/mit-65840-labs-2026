@@ -424,30 +424,25 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	}(args.LastIncludedIndex, args.Data, args.Term)
 }
 
-// faster apology for a candidate: next index is the conflict boundary.
-func (rf *Raft) takeCandidateNextIndex(reply *AppendEntriesReply, server int) {
-	curNext := rf.nextIndex[server]
+// backupNextIndex repositions a follower's nextIndex after a rejection.
+// The next index can never fall below the snapshot prefix (lastIncluded+1)
+// nor exceed the leader's own end of log, which is how a leader backs up
+// quickly past a follower whose log was longer.
+func (rf *Raft) backupNextIndex(reply *AppendEntriesReply, server int) {
+	confl := reply.ConflictIndex
 	if reply.ConflictTerm > 0 {
-		first := reply.ConflictIndex
-		found := false
-		for idx := rf.lastLogIndex(); idx >= rf.lastIncludedIndex+1; idx-- {
-			if rf.entryAt(idx).Term == reply.ConflictTerm {
+		first := confl
+		for idx := confl; idx >= rf.lastIncludedIndex+1; idx-- {
+			if rf.entryTermInternalClamp(idx) == reply.ConflictTerm {
 				first = idx
-				found = true
-				continue
-			}
-			if found {
-				break
 			}
 		}
-		if found {
-			rf.nextIndex[server] = first
-		} else {
-			rf.nextIndex[server] = reply.ConflictIndex
+		if rf.entryTermInternalClamp(first) == reply.ConflictTerm {
+			confl = first
 		}
-		return
 	}
-	rf.nextIndex[server] = max(1, min(curNext, reply.ConflictIndex))
+	rf.nextIndex[server] = max(rf.lastIncludedIndex+1,
+		min(rf.lastLogIndex()+1, confl))
 }
 
 // Log entries are sent to the leader's peers asynchronously here.
@@ -509,11 +504,7 @@ func (rf *Raft) leaderAppend(server int) {
 		rf.leaderAdvanceCommit()
 		return
 	}
-	if reply.ConflictIndex >= rf.lastIncludedIndex+1 &&
-		reply.ConflictIndex <= rf.lastLogIndex()+1 {
-		rf.takeCandidateNextIndex(&reply, server)
-		rf.nextIndex[server] = max(rf.nextIndex[server], rf.lastIncludedIndex+1)
-	}
+	rf.backupNextIndex(&reply, server)
 }
 
 // electionEndFromTick bumps the timer whenever someone needs their
@@ -529,10 +520,9 @@ func (rf *Raft) leaderAdvanceCommit() {
 	if rf.state != leader {
 		return
 	}
-	mid := rf.matchIndex[rf.me]
-	count := 1
+	mid := rf.commitIndex
 	for idx := rf.lastLogIndex(); idx > rf.commitIndex; idx-- {
-		count = 1
+		count := 1
 		rec := rf.entryAt(idx)
 		if rec == nil || rec.Term != rf.currentTerm {
 			continue
@@ -545,13 +535,14 @@ func (rf *Raft) leaderAdvanceCommit() {
 				count++
 			}
 		}
-		if count * 2 > len(rf.peers) {
+		if count*2 > len(rf.peers) {
 			mid = idx
 			break
 		}
 	}
 	if mid > rf.commitIndex {
 		rf.commitIndex = mid
+		rf.applyCommitted()
 	}
 }
 
