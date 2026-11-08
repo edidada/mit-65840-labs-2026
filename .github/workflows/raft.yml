@@ -1,0 +1,29 @@
+name: MIT 6.5840 Lab3 Raft
+on:
+  push:
+    branches: [edidada/raft]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  raft:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build raft daemon
+        working-directory: src
+        run: go build -race -o main/raft1d main/raft1d.go
+      - name: Run official Raft tests
+        working-directory: src/raft1
+        run: timeout 3600 go test -race -count=1 . -v
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raft-results
+          path: src/raft1/*.go
+          if-no-files-found: warn
