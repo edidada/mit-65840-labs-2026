@@ -1,0 +1,28 @@
+name: MIT 6.5840 Lab2 KVServer
+on:
+  push:
+    branches: [edidada/lab2-kvserver]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kvserver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run official KVServer tests
+        working-directory: src/kvsrv1
+        run: timeout 1080 go test -v -count=1 . 
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kvsrv-results
+          path: |
+            src/kvsrv1/*.go
+            src/kvsrv1/kvsrv-results.json
+          if-no-files-found: warn
