@@ -1,0 +1,272 @@
+﻿2026-11-08T05:35:30.3054712Z Current runner version: '2.338.2'
+2026-11-08T05:35:30.3076334Z ##[group]Runner Image Provisioner
+2026-11-08T05:35:30.3077105Z Hosted Compute Agent
+2026-11-08T05:35:30.3077666Z Version: 20261028.624
+2026-11-08T05:35:30.3078413Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-08T05:35:30.3079081Z Build Date: 2026-10-28T21:51:42Z
+2026-11-08T05:35:30.3079740Z Worker ID: {067d10f9-2a98-49af-af23-bc5c96ff93c2}
+2026-11-08T05:35:30.3080377Z Region: westus3
+2026-11-08T05:35:30.3080875Z Cloud: Azure
+2026-11-08T05:35:30.3081372Z ##[endgroup]
+2026-11-08T05:35:30.3082508Z ##[group]Operating System
+2026-11-08T05:35:30.3083102Z Ubuntu
+2026-11-08T05:35:30.3083601Z 24.04.5
+2026-11-08T05:35:30.3084034Z LTS
+2026-11-08T05:35:30.3084552Z ##[endgroup]
+2026-11-08T05:35:30.3085068Z ##[group]Runner Image
+2026-11-08T05:35:30.3085976Z Image: ubuntu-24.04
+2026-11-08T05:35:30.3086503Z Version: 20261101.360.1
+2026-11-08T05:35:30.3087618Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-08T05:35:30.3089062Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-08T05:35:30.3089924Z ##[endgroup]
+2026-11-08T05:35:30.3090876Z ##[group]GITHUB_TOKEN Permissions
+2026-11-08T05:35:30.3092730Z Contents: read
+2026-11-08T05:35:30.3093248Z Metadata: read
+2026-11-08T05:35:30.3093756Z ##[endgroup]
+2026-11-08T05:35:30.3095832Z Secret source: Actions
+2026-11-08T05:35:30.3096633Z Cache mode: write
+2026-11-08T05:35:30.3097322Z Prepare workflow directory
+2026-11-08T05:35:30.3364991Z Prepare all required actions
+2026-11-08T05:35:30.3405832Z Getting action download info
+2026-11-08T05:35:30.6689359Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-08T05:35:30.7574813Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-11-08T05:35:31.3884727Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-08T05:35:31.6384049Z Complete job name: mr
+2026-11-08T05:35:31.7094475Z ##[group]Run actions/checkout@v4
+2026-11-08T05:35:31.7095223Z with:
+2026-11-08T05:35:31.7095613Z   repository: edidada/mit-65840-labs-2026
+2026-11-08T05:35:31.7099159Z   token: ***
+2026-11-08T05:35:31.7099514Z   ssh-strict: true
+2026-11-08T05:35:31.7099875Z   ssh-user: git
+2026-11-08T05:35:31.7100237Z   persist-credentials: true
+2026-11-08T05:35:31.7100626Z   clean: true
+2026-11-08T05:35:31.7100995Z   sparse-checkout-cone-mode: true
+2026-11-08T05:35:31.7101426Z   fetch-depth: 1
+2026-11-08T05:35:31.7101786Z   fetch-tags: false
+2026-11-08T05:35:31.7102149Z   show-progress: true
+2026-11-08T05:35:31.7102540Z   lfs: false
+2026-11-08T05:35:31.7102920Z   submodules: false
+2026-11-08T05:35:31.7103290Z   set-safe-directory: true
+2026-11-08T05:35:31.7103702Z   allow-unsafe-pr-checkout: false
+2026-11-08T05:35:31.7104306Z ##[endgroup]
+2026-11-08T05:35:31.9299806Z Syncing repository: edidada/mit-65840-labs-2026
+2026-11-08T05:35:31.9302282Z ##[group]Getting Git version info
+2026-11-08T05:35:31.9303449Z Working directory is '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-08T05:35:31.9304860Z [command]/usr/bin/git version
+2026-11-08T05:35:31.9364826Z git version 2.56.0
+2026-11-08T05:35:31.9382725Z ##[endgroup]
+2026-11-08T05:35:31.9396470Z Temporarily overriding HOME='/home/runner/work/_temp/72944b40-f963-4eb9-bd99-2ed1ca393ed3' before making global git config changes
+2026-11-08T05:35:31.9398543Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T05:35:31.9401655Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T05:35:31.9453231Z Deleting the contents of '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-08T05:35:31.9459790Z ##[group]Initializing the repository
+2026-11-08T05:35:31.9462057Z [command]/usr/bin/git init /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T05:35:31.9547638Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-08T05:35:31.9549207Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-08T05:35:31.9550521Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-08T05:35:31.9551753Z hint: call:
+2026-11-08T05:35:31.9552489Z hint:
+2026-11-08T05:35:31.9553310Z hint: 	git config --global init.defaultBranch <name>
+2026-11-08T05:35:31.9554185Z hint:
+2026-11-08T05:35:31.9555068Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-08T05:35:31.9556143Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-08T05:35:31.9556847Z hint:
+2026-11-08T05:35:31.9557222Z hint: 	git branch -m <name>
+2026-11-08T05:35:31.9557612Z hint:
+2026-11-08T05:35:31.9558460Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-08T05:35:31.9559626Z Initialized empty Git repository in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/.git/
+2026-11-08T05:35:31.9567136Z [command]/usr/bin/git remote add origin https://github.com/edidada/mit-65840-labs-2026
+2026-11-08T05:35:31.9613132Z ##[endgroup]
+2026-11-08T05:35:31.9614200Z ##[group]Disabling automatic garbage collection
+2026-11-08T05:35:31.9616419Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-08T05:35:31.9650116Z ##[endgroup]
+2026-11-08T05:35:31.9650991Z ##[group]Setting up auth
+2026-11-08T05:35:31.9656649Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T05:35:31.9691128Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T05:35:32.0151941Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T05:35:32.0191133Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T05:35:32.0400373Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T05:35:32.0441950Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T05:35:32.0651955Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-08T05:35:32.0819401Z ##[endgroup]
+2026-11-08T05:35:32.0820465Z ##[group]Fetching the repository
+2026-11-08T05:35:32.0830270Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +fba909846d64f638a15b5027b99498851b696456:refs/remotes/origin/edidada/mapreduce
+2026-11-08T05:35:32.7723553Z From https://github.com/edidada/mit-65840-labs-2026
+2026-11-08T05:35:32.7724836Z  * [new ref]         fba909846d64f638a15b5027b99498851b696456 -> origin/edidada/mapreduce
+2026-11-08T05:35:32.7727292Z ##[endgroup]
+2026-11-08T05:35:32.7728380Z ##[group]Determining the checkout info
+2026-11-08T05:35:32.7730842Z ##[endgroup]
+2026-11-08T05:35:32.7736083Z [command]/usr/bin/git sparse-checkout disable
+2026-11-08T05:35:32.7789585Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-08T05:35:32.7826030Z ##[group]Checking out the ref
+2026-11-08T05:35:32.7829237Z [command]/usr/bin/git checkout --progress --force -B edidada/mapreduce refs/remotes/origin/edidada/mapreduce
+2026-11-08T05:35:32.8043479Z Switched to a new branch 'edidada/mapreduce'
+2026-11-08T05:35:32.8046711Z branch 'edidada/mapreduce' set up to track 'origin/edidada/mapreduce'.
+2026-11-08T05:35:32.8053523Z ##[endgroup]
+2026-11-08T05:35:32.8099956Z [command]/usr/bin/git log -1 --format=%H
+2026-11-08T05:35:32.8129269Z fba909846d64f638a15b5027b99498851b696456
+2026-11-08T05:35:32.8377228Z ##[group]Run actions/setup-go@v5
+2026-11-08T05:35:32.8377683Z with:
+2026-11-08T05:35:32.8378450Z   go-version: 1.22
+2026-11-08T05:35:32.8378821Z   check-latest: false
+2026-11-08T05:35:32.8382037Z   token: ***
+2026-11-08T05:35:32.8382375Z   cache: true
+2026-11-08T05:35:32.8382714Z ##[endgroup]
+2026-11-08T05:35:32.9495019Z Setup go version spec 1.22
+2026-11-08T05:35:32.9534502Z Attempting to download 1.22...
+2026-11-08T05:35:32.9654002Z (node:2117) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T05:35:33.8799382Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T05:35:33.8801120Z matching 1.22...
+2026-11-08T05:35:33.8854071Z Acquiring 1.22.12 from https://github.com/actions/go-versions/releases/download/1.22.12-13149489080/go-1.22.12-linux-x64.tar.gz
+2026-11-08T05:35:34.4634147Z Extracting Go...
+2026-11-08T05:35:34.4746956Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/6faea939-610b-4b55-8365-e453363d3ce0 -f /home/runner/work/_temp/ca84871b-8834-4ee4-97fa-738b7e5e97e8
+2026-11-08T05:35:35.8387423Z Successfully extracted go to /home/runner/work/_temp/6faea939-610b-4b55-8365-e453363d3ce0
+2026-11-08T05:35:35.8388033Z Adding to the cache ...
+2026-11-08T05:35:39.5319657Z Successfully cached go to /opt/hostedtoolcache/go/1.22.12/x64
+2026-11-08T05:35:39.5321770Z Added go to the path
+2026-11-08T05:35:39.5328818Z Successfully set up Go version 1.22
+2026-11-08T05:35:39.6472731Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-08T05:35:39.6521779Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-08T05:35:39.6572607Z /home/runner/go/pkg/mod
+2026-11-08T05:35:39.6585031Z /home/runner/.cache/go-build
+2026-11-08T05:35:39.6607856Z ##[warning]Restore cache failed: Dependencies file is not found in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026. Supported file pattern: go.sum
+2026-11-08T05:35:39.6632769Z go version go1.22.12 linux/amd64
+2026-11-08T05:35:39.6632963Z 
+2026-11-08T05:35:39.6633283Z ##[group]go env
+2026-11-08T05:35:39.8574137Z GO111MODULE=''
+2026-11-08T05:35:39.8574485Z GOARCH='amd64'
+2026-11-08T05:35:39.8574703Z GOBIN=''
+2026-11-08T05:35:39.8574909Z GOCACHE='/home/runner/.cache/go-build'
+2026-11-08T05:35:39.8575166Z GOENV='/home/runner/.config/go/env'
+2026-11-08T05:35:39.8575394Z GOEXE=''
+2026-11-08T05:35:39.8575575Z GOEXPERIMENT=''
+2026-11-08T05:35:39.8575746Z GOFLAGS=''
+2026-11-08T05:35:39.8575915Z GOHOSTARCH='amd64'
+2026-11-08T05:35:39.8576120Z GOHOSTOS='linux'
+2026-11-08T05:35:39.8576311Z GOINSECURE=''
+2026-11-08T05:35:39.8576533Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-11-08T05:35:39.8576798Z GONOPROXY=''
+2026-11-08T05:35:39.8576992Z GONOSUMDB=''
+2026-11-08T05:35:39.8577151Z GOOS='linux'
+2026-11-08T05:35:39.8577338Z GOPATH='/home/runner/go'
+2026-11-08T05:35:39.8577533Z GOPRIVATE=''
+2026-11-08T05:35:39.8577977Z GOPROXY='https://proxy.golang.org,direct'
+2026-11-08T05:35:39.8578598Z GOROOT='/opt/hostedtoolcache/go/1.22.12/x64'
+2026-11-08T05:35:39.8578859Z GOSUMDB='sum.golang.org'
+2026-11-08T05:35:39.8579070Z GOTMPDIR=''
+2026-11-08T05:35:39.8579241Z GOTOOLCHAIN='auto'
+2026-11-08T05:35:39.8579518Z GOTOOLDIR='/opt/hostedtoolcache/go/1.22.12/x64/pkg/tool/linux_amd64'
+2026-11-08T05:35:39.8579806Z GOVCS=''
+2026-11-08T05:35:39.8580009Z GOVERSION='go1.22.12'
+2026-11-08T05:35:39.8580199Z GCCGO='gccgo'
+2026-11-08T05:35:39.8580367Z GOAMD64='v1'
+2026-11-08T05:35:39.8580529Z AR='ar'
+2026-11-08T05:35:39.8580683Z CC='gcc'
+2026-11-08T05:35:39.8580856Z CXX='g++'
+2026-11-08T05:35:39.8581019Z CGO_ENABLED='1'
+2026-11-08T05:35:39.8581190Z GOMOD='/dev/null'
+2026-11-08T05:35:39.8581361Z GOWORK=''
+2026-11-08T05:35:39.8581536Z CGO_CFLAGS='-O2 -g'
+2026-11-08T05:35:39.8581712Z CGO_CPPFLAGS=''
+2026-11-08T05:35:39.8581885Z CGO_CXXFLAGS='-O2 -g'
+2026-11-08T05:35:39.8582060Z CGO_FFLAGS='-O2 -g'
+2026-11-08T05:35:39.8582235Z CGO_LDFLAGS='-O2 -g'
+2026-11-08T05:35:39.8582427Z PKG_CONFIG='pkg-config'
+2026-11-08T05:35:39.8583348Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build4065826040=/tmp/go-build -gno-record-gcc-switches'
+2026-11-08T05:35:39.8583944Z 
+2026-11-08T05:35:39.8584315Z ##[endgroup]
+2026-11-08T05:35:39.8792337Z ##[group]Run set -e
+2026-11-08T05:35:39.8792622Z [36;1mset -e[0m
+2026-11-08T05:35:39.8792882Z [36;1mgo build -o main/mrsequential main/mrsequential.go[0m
+2026-11-08T05:35:39.8793192Z [36;1mgo build -o main/mrworker main/mrworker.go[0m
+2026-11-08T05:35:39.8793489Z [36;1mgo build -o main/mrcoordinator main/mrcoordinator.go[0m
+2026-11-08T05:35:39.8793856Z [36;1mfor app in wc indexer mtiming rtiming jobcount early_exit crash nocrash; do[0m
+2026-11-08T05:35:39.8794249Z [36;1m  go build -buildmode=plugin -o mrapps/$app.so mrapps/$app.go[0m
+2026-11-08T05:35:39.8794529Z [36;1mdone[0m
+2026-11-08T05:35:39.8817516Z shell: /usr/bin/bash -e {0}
+2026-11-08T05:35:39.8817745Z ##[endgroup]
+2026-11-08T05:36:06.6076397Z ##[group]Run timeout 1080 go test -v -count=1 .
+2026-11-08T05:36:06.6076723Z [36;1mtimeout 1080 go test -v -count=1 .[0m
+2026-11-08T05:36:06.6095227Z shell: /usr/bin/bash -e {0}
+2026-11-08T05:36:06.6095453Z ##[endgroup]
+2026-11-08T05:36:08.7942081Z === RUN   TestWc
+2026-11-08T05:36:12.1498396Z --- PASS: TestWc (3.36s)
+2026-11-08T05:36:12.1498845Z === RUN   TestIndexer
+2026-11-08T05:36:15.3264910Z --- PASS: TestIndexer (3.18s)
+2026-11-08T05:36:15.3265395Z === RUN   TestMapParallel
+2026-11-08T05:36:22.3426057Z --- PASS: TestMapParallel (7.02s)
+2026-11-08T05:36:22.3426481Z === RUN   TestReduceParallel
+2026-11-08T05:36:30.3636022Z --- PASS: TestReduceParallel (8.02s)
+2026-11-08T05:36:30.3636463Z === RUN   TestJobCount
+2026-11-08T05:36:41.3787997Z --- PASS: TestJobCount (11.02s)
+2026-11-08T05:36:41.3788557Z === RUN   TestEarlyExit
+2026-11-08T05:36:47.3971903Z --- PASS: TestEarlyExit (6.02s)
+2026-11-08T05:36:47.3972313Z === RUN   TestCrashWorker
+2026-11-08T05:37:16.4381423Z 2026/11/08 05:37:16 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:16.4382550Z 2026/11/08 05:37:16 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:16.4389596Z 2026/11/08 05:37:16 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:16.4489603Z --- PASS: TestCrashWorker (29.05s)
+2026-11-08T05:37:16.4489979Z PASS
+2026-11-08T05:37:17.4380551Z 2026/11/08 05:37:17 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:17.4381325Z 2026/11/08 05:37:17 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:17.4391518Z 2026/11/08 05:37:17 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:18.4381725Z 2026/11/08 05:37:18 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:18.4389967Z 2026/11/08 05:37:18 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:18.4400693Z 2026/11/08 05:37:18 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:19.4383694Z 2026/11/08 05:37:19 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:19.4401122Z 2026/11/08 05:37:19 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:19.4401940Z 2026/11/08 05:37:19 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:20.4385347Z 2026/11/08 05:37:20 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:20.4401985Z 2026/11/08 05:37:20 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:20.4402950Z 2026/11/08 05:37:20 cannot dial Coordinator.AskTask : dial unix /tmp/5840-mr-GFntkG5N-k2kR6jfalgU: connect: no such file or directory
+2026-11-08T05:37:21.4419614Z ok  	6.5840/mr	72.650s
+2026-11-08T05:37:21.4879520Z ##[group]Run actions/upload-artifact@v4
+2026-11-08T05:37:21.4879765Z with:
+2026-11-08T05:37:21.4879940Z   name: mapreduce-results
+2026-11-08T05:37:21.4880146Z   path: src/mr/*.go
+src/mr/mr-*.txt
+
+2026-11-08T05:37:21.4880364Z   if-no-files-found: warn
+2026-11-08T05:37:21.4880551Z   compression-level: 6
+2026-11-08T05:37:21.4880730Z   overwrite: false
+2026-11-08T05:37:21.4880911Z   include-hidden-files: false
+2026-11-08T05:37:21.4881110Z ##[endgroup]
+2026-11-08T05:37:21.6265500Z (node:10732) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T05:37:21.6266203Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T05:37:21.6339121Z With the provided path, there will be 5 files uploaded
+2026-11-08T05:37:21.6340025Z Artifact name is valid!
+2026-11-08T05:37:21.6340361Z Root directory input is valid!
+2026-11-08T05:37:21.9598866Z Beginning upload of artifact content to blob storage
+2026-11-08T05:37:21.9868951Z (node:10732) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T05:37:22.1853728Z Uploaded bytes 7372
+2026-11-08T05:37:22.2421578Z Finished uploading artifact content to blob storage!
+2026-11-08T05:37:22.2422363Z SHA256 digest of uploaded artifact zip is e63dd0c0ebd89e7a034657db8622e8445183e050ab274127c3dfae1d177250ca
+2026-11-08T05:37:22.2423013Z Finalizing artifact upload
+2026-11-08T05:37:22.6639087Z Artifact mapreduce-results.zip successfully finalized. Artifact ID 13605497196
+2026-11-08T05:37:22.6640009Z Artifact mapreduce-results has been successfully uploaded! Final size is 7372 bytes. Artifact ID is 13605497196
+2026-11-08T05:37:22.6645012Z Artifact download URL: https://github.com/edidada/mit-65840-labs-2026/actions/runs/42451372846/artifacts/13605497196
+2026-11-08T05:37:22.6825291Z Post job cleanup.
+2026-11-08T05:37:22.7875210Z (node:10744) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T05:37:22.7875873Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T05:37:22.7946876Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-08T05:37:22.7987045Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-08T05:37:22.8032973Z /home/runner/go/pkg/mod
+2026-11-08T05:37:22.8039278Z /home/runner/.cache/go-build
+2026-11-08T05:37:22.8044560Z [warning]Cache folder path is retrieved but doesn't exist on disk: /home/runner/go/pkg/mod
+2026-11-08T05:37:22.8045228Z Primary key was not generated. Please check the log messages above for more errors or information
+2026-11-08T05:37:22.8251746Z Post job cleanup.
+2026-11-08T05:37:22.8982866Z [command]/usr/bin/git version
+2026-11-08T05:37:22.9021357Z git version 2.56.0
+2026-11-08T05:37:22.9051445Z Temporarily overriding HOME='/home/runner/work/_temp/28f96eee-0894-4ace-bf91-90c11212b21c' before making global git config changes
+2026-11-08T05:37:22.9052500Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T05:37:22.9055556Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T05:37:22.9094410Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T05:37:22.9127561Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T05:37:22.9358711Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T05:37:22.9396348Z http.https://github.com/.extraheader
+2026-11-08T05:37:22.9407274Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-08T05:37:22.9440407Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T05:37:22.9663480Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T05:37:22.9702862Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T05:37:23.0103648Z Cleaning up orphan processes
+2026-11-08T05:37:23.0389268Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
