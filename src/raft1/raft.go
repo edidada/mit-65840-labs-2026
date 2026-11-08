@@ -452,6 +452,11 @@ func (rf *Raft) takeCandidateNextIndex(reply *AppendEntriesReply, server int) {
 
 // Log entries are sent to the leader's peers asynchronously here.
 func (rf *Raft) leaderAppend(server int) {
+	rf.mu.Lock()
+	if rf.state != leader {
+		rf.mu.Unlock()
+		return
+	}
 	term := rf.currentTerm
 	nextIndex := rf.nextIndex[server]
 	prevIndex := nextIndex - 1
@@ -469,6 +474,7 @@ func (rf *Raft) leaderAppend(server int) {
 		copy(entries, rf.log[off:])
 		args.Entries = entries
 	}
+	rf.mu.Unlock()
 	var reply AppendEntriesReply
 	ok := rf.peers[server].Call("Raft.AppendEntries", args, &reply)
 	if !ok {
@@ -601,8 +607,7 @@ func (rf *Raft) ticker() {
 	for true {
 		rf.mu.Lock()
 		state := rf.state
-		_ = state
-		if time.Now().After(rf.electionEnd) {
+		if state != leader && time.Now().After(rf.electionEnd) {
 			rf.startElectionLocked()
 		}
 		term := rf.currentTerm
@@ -702,11 +707,6 @@ func (rf *Raft) applyCommitted() {
 		}
 	}
 }
-
-// The applier goroutine is not actually necessary since the lab asks
-// us to apply synchronously; keep the channel drained in case a
-// snapshot is pending while the applier works.
-func (rf *Raft) adoration() {}
 
 func min(a, b int) int {
 	if a < b {
