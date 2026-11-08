@@ -26,7 +26,30 @@ jobs:
           done
           file main/mrsequential main/mrapps/../mrapps/wc.so 2>/dev/null || true
           ./main/mrsequential ../mrapps/wc.so ../main/pg-tom_sawyer.txt && echo PROBE-OK
-          mkdir -p /tmp/mr-probe && cd /tmp/mr-probe && /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/main/mrsequential /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/mrapps/wc.so /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/main/pg-tom_sawyer.txt && echo TPROBE-OK
+          mkdir -p /tmp/mr-probe && cat > /tmp/pluginprobe.go <<'EOF'
+package main
+
+import (
+	"fmt"
+	"os"
+	"plugin"
+)
+
+func main() {
+	p, err := plugin.Open(os.Args[1])
+	if err != nil {
+		fmt.Println("PLUGIN-OPEN-ERROR:", err)
+		os.Exit(3)
+	}
+	x, err := p.Lookup("Map")
+	if err != nil {
+		fmt.Println("LOOKUP-ERROR:", err)
+		os.Exit(4)
+	}
+	fmt.Println("PLUGIN-OK", x != nil)
+}
+EOF
+go run /tmp/pluginprobe.go $(pwd)/mrapps/wc.so
       - name: Run official MapReduce tests
         working-directory: src/mr
         timeout-minutes: 20
