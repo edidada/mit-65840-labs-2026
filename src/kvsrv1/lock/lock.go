@@ -42,16 +42,19 @@ func (lk *Lock) Acquire() {
 		switch {
 		case err == rpc.ErrNoKey:
 			putErr := lk.ck.Put(lk.key, lk.holder, 0)
-			if putErr == rpc.OK || putErr == rpc.ErrMaybe {
+			if putErr == rpc.OK {
 				return
 			}
+			// ErrMaybe lost the answer: re-read and only return once the
+			// entry is actually ours.
 		case err == rpc.OK && val == lk.holder:
 			return
 		case err == rpc.OK && val == "":
 			putErr := lk.ck.Put(lk.key, lk.holder, ver)
-			if putErr == rpc.OK || putErr == rpc.ErrMaybe {
+			if putErr == rpc.OK {
 				return
 			}
+			// ErrMaybe: verify, like the ErrNoKey case above.
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
