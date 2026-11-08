@@ -221,7 +221,7 @@ type RequestVoteReply struct {
 
 // candidateId re-answering with our known fact about the log.
 func (rf *Raft) upToDate(lastLogIndex, lastLogTerm int) bool {
-	lTerm, lIndex := rf.lastLogTerm_, rf.lastLogIndex_
+	lTerm, lIndex := rf.lastLogTerm(), rf.lastLogIndex()
 	if lastLogTerm != lTerm {
 		return lastLogTerm > lTerm
 	}
@@ -601,7 +601,7 @@ func (rf *Raft) ticker() {
 	for true {
 		rf.mu.Lock()
 		state := rf.state
-		_, _ = state, rf.leaderKnown
+		_ = state
 		if time.Now().After(rf.electionEnd) {
 			rf.startElectionLocked()
 		}
