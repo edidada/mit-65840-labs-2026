@@ -82,6 +82,7 @@ func mkCorrectOutput(files []string, app, out string) {
 	args := append([]string{app}, files...)
 	cmd := exec.Command("../../main/mrsequential", args...)
 	cmd.Dir = tmp
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("mrsequential %v failed err %v", args, err)
 	}

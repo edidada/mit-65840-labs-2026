@@ -24,32 +24,6 @@ jobs:
           for app in wc indexer mtiming rtiming jobcount early_exit crash nocrash; do
             go build -buildmode=plugin -o ../mrapps/$app.so mrapps/$app.go
           done
-          file main/mrsequential main/mrapps/../mrapps/wc.so 2>/dev/null || true
-          ./main/mrsequential ../mrapps/wc.so ../main/pg-tom_sawyer.txt && echo PROBE-OK
-          mkdir -p /tmp/mr-probe && cat > /tmp/pluginprobe.go <<'EOF'
-package main
-
-import (
-	"fmt"
-	"os"
-	"plugin"
-)
-
-func main() {
-	p, err := plugin.Open(os.Args[1])
-	if err != nil {
-		fmt.Println("PLUGIN-OPEN-ERROR:", err)
-		os.Exit(3)
-	}
-	x, err := p.Lookup("Map")
-	if err != nil {
-		fmt.Println("LOOKUP-ERROR:", err)
-		os.Exit(4)
-	}
-	fmt.Println("PLUGIN-OK", x != nil)
-}
-EOF
-go run /tmp/pluginprobe.go $(pwd)/mrapps/wc.so
       - name: Run official MapReduce tests
         working-directory: src/mr
         timeout-minutes: 20
