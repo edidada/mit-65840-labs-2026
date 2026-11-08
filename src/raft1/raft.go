@@ -52,6 +52,7 @@ type Raft struct {
 	matchIndex []int
 
 	applyCh     chan raftapi.ApplyMsg
+	applyInt    chan raftapi.ApplyMsg
 	electionEnd time.Time // reset whenever a valid message arrives
 	granted     int       // votes received in this term
 	leaderID    int
@@ -106,13 +107,15 @@ func (rf *Raft) trimLogPrefix(index int) {
 	if off < 0 || off > len(rf.log) {
 		return
 	}
+	// Compute the boundary term while the records are still present.
+	term := rf.entryTermInternal(index)
 	if off == len(rf.log) {
 		rf.log = nil
 	} else {
 		rf.log = append([]LogRecord{}, rf.log[off:]...)
 	}
 	rf.lastIncludedIndex = index
-	rf.lastIncludedTerm = rf.entryTermInternal(index)
+	rf.lastIncludedTerm = term
 }
 
 // entryTermInternal returns the term of the entry at index, taking the
@@ -297,6 +300,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 	if args.PrevLogIndex >= rf.lastIncludedIndex &&
 		rf.entryTermInternal(args.PrevLogIndex) != args.PrevLogTerm {
+		// conflicts are accelerated: describe the term boundary.
 		hole := args.PrevLogIndex
 		if rec := rf.entryAt(args.PrevLogIndex); rec != nil {
 			hole = rec.Index
@@ -310,14 +314,13 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.ConflictIndex = idx
 		return
 	}
-	if args.PrevLogIndex < rf.lastIncludedIndex &&
-		args.PrevLogIndex > 0 &&
-		rf.entryTermInternal(args.PrevLogIndex) == 0 {
-		// cannot validate an index inside the discarded prefix beyond the
-		// snapshot; the leader will normally resend with a newer index
-		reply.Success = true
-		reply.ConflictIndex = rf.lastIncludedIndex + 1
-		return
+	if args.PrevLogIndex < rf.lastIncludedIndex {
+		// Everything inside the snapshot prefix is correct on this peer
+		// by construction; normalise the reference point to the boundary
+		// and continue with entries beyond it (they arrive with indexes
+		// above lastIncludedIndex, so skip any that overlap).
+		args.PrevLogIndex = rf.lastIncludedIndex
+		args.PrevLogTerm = rf.lastIncludedTerm
 	}
 
 	for i, entry := range args.Entries {
@@ -339,21 +342,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			})
 		}
 	}
-	off := 0
-	if args.PrevLogIndex >= rf.lastIncludedIndex {
-		off = args.PrevLogIndex - rf.lastIncludedIndex
-	}
-	if off < len(args.Entries) {
-		reply.Success = true
-	}
-	rf.commitIndexAtLeast(args.LeaderCommit)
-	if args.LeaderCommit > rf.commitIndex {
-		rf.commitIndex = min(args.LeaderCommit, rf.lastLogIndex())
-	}
 	reply.Success = true
 	reply.ConflictIndex = rf.lastLogIndex() + 1
+	rf.commitIndexAtLeast(args.LeaderCommit)
 	rf.persist()
-	// Deliver at most one apply push per handler; the applier drains.
 	rf.applyCommitted()
 }
 
@@ -587,12 +579,6 @@ func (rf *Raft) dispatchAppendAll(term int) {
 	}
 }
 
-func (rf *Raft) applier() {
-	for msg := range rf.applyCh {
-		_ = msg
-	}
-}
-
 // the ticker drives election and heartbeat.
 func (rf *Raft) ticker() {
 	for true {
@@ -680,22 +666,29 @@ func (rf *Raft) sendVote(server, term, lastIdx, lastTrm int) {
 	}
 }
 
-// applyCommitted pushes every committed-but-unapplied entry into applyCh.
+// applyCommitted queues every committed-but-unapplied entry for the
+// dedicated applier goroutine, so the raft mutex is never held while a
+// possibly slow consumer drains applyCh.
 func (rf *Raft) applyCommitted() {
 	for rf.lastApplied < rf.commitIndex {
-		rf.lastApplied++
-		rec := rf.entryAt(rf.lastApplied)
+		rec := rf.entryAt(rf.lastApplied + 1)
 		if rec == nil {
 			break
 		}
-		// copy values out of the shared structure before delivering.
-		cmd := rec.Command
-		idx := rec.Index
-		rf.applyCh <- raftapi.ApplyMsg{
+		rf.lastApplied++
+		rf.applyInt <- raftapi.ApplyMsg{
 			CommandValid: true,
-			Command:      cmd,
-			CommandIndex: idx,
+			Command:      rec.Command,
+			CommandIndex: rec.Index,
 		}
+	}
+}
+
+// applier forwards queued messages onto the service channel without
+// holding rf.mu.
+func (rf *Raft) applier() {
+	for msg := range rf.applyInt {
+		rf.applyCh <- msg
 	}
 }
 
@@ -730,12 +723,14 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.lastIncludedIndex = 0
 	rf.lastIncludedTerm = 0
 	rf.granted = 0
+	rf.applyInt = make(chan raftapi.ApplyMsg, 8192)
 	rf.resetElectionLocked()
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
 	go rf.ticker()
+	go rf.applier()
 
 	return rf
 }
