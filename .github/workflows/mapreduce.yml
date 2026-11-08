@@ -19,8 +19,7 @@ jobs:
         run: |
           set -e
           for app in wc indexer mtiming rtiming jobcount early_exit crash nocrash; do
-            go build -o ../mrapps/$app.so mrapps/$app.go
-            gofmt -l mr/$app.go mrapps/$app.go 2>/dev/null || true
+            go build -buildmode=plugin -o ../mrapps/$app.so mrapps/$app.go
           done
       - name: Run official MapReduce tests
         working-directory: src/mr
