@@ -18,6 +18,9 @@ jobs:
         working-directory: src
         run: |
           set -e
+          go build -o main/mrsequential main/mrsequential.go
+          go build -o main/mrworker main/mrworker.go
+          go build -o main/mrcoordinator main/mrcoordinator.go
           for app in wc indexer mtiming rtiming jobcount early_exit crash nocrash; do
             go build -buildmode=plugin -o ../mrapps/$app.so mrapps/$app.go
           done
