@@ -57,29 +57,37 @@ func (lk *Lock) Acquire() {
 	}
 }
 
-// Release blanks the entry only while it still names us; ErrMaybe is
-// accepted, the assignment is equivalent either way.
+// Release never trusts ErrMaybe: the entry must actually blank or be
+// owned by somebody else before returning, otherwise our client would
+// proceed past Release while still being the recorded holder and the
+// concurrent tester deadline check would fire.
 func (lk *Lock) Release() {
 	for {
 		val, ver, err := lk.ck.Get(lk.key)
 		switch {
 		case err != rpc.OK:
+			// ErrNoKey: nothing to free.
 			return
 		case val == lk.holder:
 			putErr := lk.ck.Put(lk.key, "", ver)
 			switch putErr {
-			case rpc.OK, rpc.ErrMaybe:
-				// ErrMaybe on a blank entry is indistinguishable from a
-				// successful release; the next Acquire confirms either way.
+			case rpc.OK:
 				return
+			case rpc.ErrMaybe:
+				// Re-check: a blank or exchanged entry means the release
+				// landed; only an unchanged holder entry makes us retry.
+				nval, _, nerr := lk.ck.Get(lk.key)
+				if nerr != rpc.OK || nval != lk.holder {
+					return
+				}
 			case rpc.ErrVersion:
-				// The entry changed under us: another acquirer took over or
-				// our first release actually landed. Either way it is freed.
-				continue
+				// The entry changed: taken over or already blank.
+				return
 			default:
 				return
 			}
 		default:
+			// Another holder or already blank; done.
 			return
 		}
 	}
