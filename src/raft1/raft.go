@@ -193,19 +193,17 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	if rf.lastApplied < index {
 		rf.lastApplied = index
 	}
-	if index > rf.lastIncludedIndex {
-		rf.lastIncludedTerm = snapTerm
-	}
-	rf.persister.Save(func() []byte {
-		w := new(bytes.Buffer)
-		e := labgob.NewEncoder(w)
-		e.Encode(rf.currentTerm)
-		e.Encode(rf.votedFor)
-		e.Encode(rf.lastIncludedIndex)
-		e.Encode(rf.lastIncludedTerm)
-		e.Encode(rf.log)
-		return w.Bytes()
-	}(), snapshot)
+	rf.lastIncludedTerm = snapTerm
+	// Persist the raft state with the service's snapshot bytes stored in
+	// the persister's snapshot slot so a crash restores both halves.
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(rf.currentTerm)
+	e.Encode(rf.votedFor)
+	e.Encode(rf.lastIncludedIndex)
+	e.Encode(rf.lastIncludedTerm)
+	e.Encode(rf.log)
+	rf.persister.Save(w.Bytes(), snapshot)
 }
 
 // example RequestVote RPC arguments structure.
@@ -394,26 +392,32 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	if args.LastIncludedIndex <= rf.lastIncludedIndex {
 		return
 	}
-	// keep any entries beyond the snapshot locally if they're also ours
-	prefix := true
-	if rec := rf.entryAt(args.LastIncludedIndex); rec != nil {
-		prefix = rec.Term == args.LastIncludedTerm
-	}
-	_ = prefix
+	// 3D semantics: the installed snapshot covers everything through
+	// LastIncludedIndex, so a follower whose log came back shorter or
+	// clashed simply adopts the leader's prefix wholesale.
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
 	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)
 	rf.trimLogPrefix(args.LastIncludedIndex)
 	rf.lastIncludedTerm = args.LastIncludedTerm
-	rf.persist()
+	// The received blob becomes this peer's own snapshot state; persist
+	// both halves atomically (the service will be told via applyCh).
+	rf.persister.Save(func() []byte {
+		w := new(bytes.Buffer)
+		e := labgob.NewEncoder(w)
+		e.Encode(rf.currentTerm)
+		e.Encode(rf.votedFor)
+		e.Encode(rf.lastIncludedIndex)
+		e.Encode(rf.lastIncludedTerm)
+		e.Encode(rf.log)
+		return w.Bytes()
+	}(), args.Data)
 	// Tell the service and keep running.
-	go func(applied int, blob []byte, term int) {
-		rf.applyCh <- raftapi.ApplyMsg{
-			SnapshotValid: true,
-			Snapshot:      blob,
-			SnapshotTerm:  term,
-			SnapshotIndex: applied,
-		}
-	}(args.LastIncludedIndex, args.Data, args.Term)
+	rf.applyInt <- raftapi.ApplyMsg{
+		SnapshotValid: true,
+		Snapshot:      args.Data,
+		SnapshotTerm:  args.LastIncludedTerm,
+		SnapshotIndex: args.LastIncludedIndex,
+	}
 }
 
 // backupNextIndex repositions a follower's nextIndex after a rejection.
@@ -445,6 +449,42 @@ func (rf *Raft) leaderAppend(server int) {
 		return
 	}
 	term := rf.currentTerm
+	if rf.nextIndex[server] <= rf.lastIncludedIndex {
+		// The follower needs a snapshot: entries below the local snapshot
+		// prefix can never be sent as AppendEntries deltas.
+		args := &InstallSnapshotArgs{
+			Term:              term,
+			LeaderID:          rf.me,
+			LastIncludedIndex: rf.lastIncludedIndex,
+			LastIncludedTerm:  rf.lastIncludedTerm,
+			Data:              rf.persister.ReadSnapshot(),
+		}
+		rf.mu.Unlock()
+		var reply InstallSnapshotReply
+		ok := rf.peers[server].Call("Raft.InstallSnapshot", args, &reply)
+		if !ok {
+			return
+		}
+		rf.mu.Lock()
+		defer rf.mu.Unlock()
+		if rf.state != leader || rf.currentTerm != term {
+			return
+		}
+		if reply.Term > rf.currentTerm {
+			rf.currentTerm = reply.Term
+			rf.state = follower
+			rf.votedFor = -1
+			rf.persist()
+			return
+		}
+		if rf.nextIndex[server] < args.LastIncludedIndex+1 {
+			rf.nextIndex[server] = args.LastIncludedIndex + 1
+		}
+		if rf.matchIndex[server] < args.LastIncludedIndex {
+			rf.matchIndex[server] = args.LastIncludedIndex
+		}
+		return
+	}
 	nextIndex := rf.nextIndex[server]
 	prevIndex := nextIndex - 1
 	prevTerm := rf.entryTermInternalClamp(prevIndex)
