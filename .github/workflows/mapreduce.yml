@@ -26,6 +26,7 @@ jobs:
           done
           file main/mrsequential main/mrapps/../mrapps/wc.so 2>/dev/null || true
           ./main/mrsequential ../mrapps/wc.so ../main/pg-tom_sawyer.txt && echo PROBE-OK
+          mkdir -p /tmp/mr-probe && cd /tmp/mr-probe && /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/main/mrsequential /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/mrapps/wc.so /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/src/main/pg-tom_sawyer.txt && echo TPROBE-OK
       - name: Run official MapReduce tests
         working-directory: src/mr
         timeout-minutes: 20
