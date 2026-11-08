@@ -24,6 +24,8 @@ jobs:
           for app in wc indexer mtiming rtiming jobcount early_exit crash nocrash; do
             go build -buildmode=plugin -o ../mrapps/$app.so mrapps/$app.go
           done
+          file main/mrsequential main/mrapps/../mrapps/wc.so 2>/dev/null || true
+          ./main/mrsequential ../mrapps/wc.so ../main/pg-tom_sawyer.txt && echo PROBE-OK
       - name: Run official MapReduce tests
         working-directory: src/mr
         timeout-minutes: 20
