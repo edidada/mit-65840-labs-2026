@@ -1,0 +1,29 @@
+name: MIT 6.5840 Lock (Lab2 companion)
+on:
+  push:
+    branches: [edidada/lock1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build daemon
+        working-directory: src
+        run: go build -o main/kvsrv1d main/kvsrv1d.go
+      - name: Run official lock tests
+        working-directory: src/kvsrv1/lock
+        run: timeout 1500 go test -v -count=1 .
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-results
+          path: src/kvsrv1/lock/*.go
+          if-no-files-found: warn
