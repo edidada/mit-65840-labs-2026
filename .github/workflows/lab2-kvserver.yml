@@ -14,6 +14,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+      - name: Build daemon binary
+        working-directory: src
+        run: go build -o main/kvsrv1d main/kvsrv1d.go
       - name: Run official KVServer tests
         working-directory: src/kvsrv1
         run: timeout 1080 go test -v -count=1 . 
