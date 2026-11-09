@@ -825,6 +825,18 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
+	// The service must receive the restored snapshot before any commands
+	// above the persisted prefix are replayed, so push a SnapshotValid
+	// first for the FSM to rebuild its duplicate table and state.
+	if blob := rf.persister.ReadSnapshot(); len(blob) > 0 && rf.lastIncludedIndex > 0 {
+		rf.applyInt <- raftapi.ApplyMsg{
+			SnapshotValid: true,
+			Snapshot:      blob,
+			SnapshotTerm:  rf.lastIncludedTerm,
+			SnapshotIndex: rf.lastIncludedIndex,
+		}
+	}
+
 	go rf.ticker()
 	go rf.applier(rf.applyEpoch)
 
