@@ -403,7 +403,13 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	// LastIncludedIndex, so a follower whose log came back shorter or
 	// clashed simply adopts the leader's prefix wholesale.
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
-	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)
+	// Reset lastApplied to the installed boundary so the service sees a
+	// single reference point: it will ingest the SnapshotValid message and
+	// expect CommandValid messages from lastIncludedIndex+1 onward. A
+	// max() here would leave the raft thinking it already applied entries
+	// the queue had delivered before the install, causing "apply out of
+	// order" at the service.
+	rf.lastApplied = args.LastIncludedIndex
 	// The follower's log tail beyond the installed snapshot belongs to
 	// earlier, possibly conflicting leaders: discard it and let the
 	// leader resend authoritative entries from lastIncludedIndex+1.
