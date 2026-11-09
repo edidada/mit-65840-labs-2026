@@ -1,11 +1,14 @@
 package shardgrp
 
 import (
+	"bytes"
+	"sync"
 
 	"6.5840/kvraft1/rsm"
 	"6.5840/kvsrv1/rpc"
 	"6.5840/labgob"
 	"6.5840/labrpc"
+	"6.5840/shardkv1/shardcfg"
 	"6.5840/shardkv1/shardgrp/shardrpc"
 	"6.5840/tester1"
 )
@@ -14,77 +17,296 @@ const (
 	ENVKEY = "65840ENV"
 )
 
+type kvRecord struct {
+	Val string
+	Ver rpc.Tversion
+}
+
+// shard is one shard's FSM state on this group: the data and the
+// ownership marker. State is "active" (this group serves it),
+// "frozen" (this group stopped serving it and awaits Delete), or the
+// shard is absent (never owned/given away).
+type shard struct {
+	State string // "active" | "frozen"
+	Num   shardcfg.Tnum
+	KV    map[string]*kvRecord
+}
 
 type KVServer struct {
 	me  int
 	rsm *rsm.RSM
 	gid tester.Tgid
 
-	// Your code here
+	mu     sync.Mutex
+	shards map[shardcfg.Tshid]*shard
 }
-
 
 func (kv *KVServer) DoOp(req any) any {
-	// Your code here
-	return nil
+	switch a := req.(type) {
+	case *rpc.GetArgs:
+		return kv.doGet(a.Key)
+	case rpc.GetArgs:
+		return kv.doGet(a.Key)
+	case *rpc.PutArgs:
+		return kv.doPut(a.Key, a.Value, a.Version)
+	case rpc.PutArgs:
+		return kv.doPut(a.Key, a.Value, a.Version)
+	case *shardrpc.FreezeShardArgs:
+		return kv.doFreeze(a)
+	case shardrpc.FreezeShardArgs:
+		return kv.doFreeze(&a)
+	case *shardrpc.InstallShardArgs:
+		return kv.doInstall(a)
+	case shardrpc.InstallShardArgs:
+		return kv.doInstall(&a)
+	case *shardrpc.DeleteShardArgs:
+		return kv.doDelete(a)
+	case shardrpc.DeleteShardArgs:
+		return kv.doDelete(&a)
+	default:
+		panic("shardgrp DoOp: unknown request type")
+	}
 }
 
+func (kv *KVServer) owns(key string) *shard {
+	s := shardcfg.Key2Shard(key)
+	sh, ok := kv.shards[s]
+	if !ok || sh.State != "active" {
+		return nil
+	}
+	return sh
+}
+
+func (kv *KVServer) doGet(key string) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	sh := kv.owns(key)
+	if sh == nil {
+		return rpc.GetReply{Err: rpc.ErrWrongGroup}
+	}
+	rec, exists := sh.KV[key]
+	if !exists {
+		return rpc.GetReply{Err: rpc.ErrNoKey}
+	}
+	return rpc.GetReply{Value: rec.Val, Version: rec.Ver, Err: rpc.OK}
+}
+
+func (kv *KVServer) doPut(key string, value string, version rpc.Tversion) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	sh := kv.owns(key)
+	if sh == nil {
+		return rpc.PutReply{Err: rpc.ErrWrongGroup}
+	}
+	rec, exists := sh.KV[key]
+	if !exists {
+		if version == 0 {
+			sh.KV[key] = &kvRecord{Val: value, Ver: 1}
+			return rpc.PutReply{Err: rpc.OK}
+		}
+		return rpc.PutReply{Err: rpc.ErrNoKey}
+	}
+	if version != rec.Ver {
+		return rpc.PutReply{Err: rpc.ErrVersion}
+	}
+	rec.Val = value
+	rec.Ver++
+	return rpc.PutReply{Err: rpc.OK}
+}
+
+// doFreeze stops serving the shard as of Num and returns its state.
+// Repeated freezes at the remembered Num hand back the same frozen
+// state (how a recovered controller finds an interrupted install), and
+// a freeze at a newer Num re-freezes whatever the group still holds
+// (an older freeze that never got installed over).
+func (kv *KVServer) doFreeze(args *shardrpc.FreezeShardArgs) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	sh, ok := kv.shards[args.Shard]
+	switch {
+	case !ok, args.Num < sh.Num, args.Num == sh.Num && sh.State == "active":
+		// we don't own the shard as of this config number
+		return shardrpc.FreezeShardReply{Num: sh.frozenNum(ok, args.Num), Err: rpc.ErrWrongGroup}
+	default:
+		// freeze (or re-freeze) at args.Num and hand back the state
+		sh.State = "frozen"
+		sh.Num = args.Num
+		return shardrpc.FreezeShardReply{State: encodeKV(sh.KV), Num: sh.Num, Err: rpc.OK}
+	}
+}
+
+func (sh *shard) frozenNum(ok bool, num shardcfg.Tnum) shardcfg.Tnum {
+	if !ok {
+		return 0
+	}
+	return sh.Num
+}
+
+// doInstall adopts the shard as of Num. Installing over means: newer
+// number wins (replaces the state), equal number is idempotent (keep
+// whatever data is already here unless the fresh state is non-empty).
+func (kv *KVServer) doInstall(args *shardrpc.InstallShardArgs) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	sh, ok := kv.shards[args.Shard]
+	if ok && args.Num < sh.Num {
+		return shardrpc.InstallShardReply{Err: rpc.ErrWrongGroup}
+	}
+	if ok && args.Num == sh.Num && len(args.State) == 0 {
+		// idempotent re-install after a confirm lost in the network
+		sh.State = "active"
+		return shardrpc.InstallShardReply{Err: rpc.OK}
+	}
+	nsh := &shard{State: "active", Num: args.Num, KV: decodeKV(args.State)}
+	if ok && len(args.State) == 0 {
+		// keep previously adopted data, bump the fence
+		nsh.KV = sh.KV
+	}
+	kv.shards[args.Shard] = nsh
+	return shardrpc.InstallShardReply{Err: rpc.OK}
+}
+
+// doDelete drops the frozen shard's data to keep the snapshot small.
+func (kv *KVServer) doDelete(args *shardrpc.DeleteShardArgs) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	sh, ok := kv.shards[args.Shard]
+	switch {
+	case !ok:
+		return shardrpc.DeleteShardReply{Err: rpc.OK}
+	case args.Num < sh.Num:
+		return shardrpc.DeleteShardReply{Err: rpc.ErrWrongGroup}
+	case sh.State != "frozen":
+		return shardrpc.DeleteShardReply{Err: rpc.ErrWrongGroup}
+	default:
+		delete(kv.shards, args.Shard)
+		return shardrpc.DeleteShardReply{Err: rpc.OK}
+	}
+}
 
 func (kv *KVServer) Snapshot() []byte {
-	// Your code here
-	return nil
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(kv.shards)
+	return w.Bytes()
 }
 
 func (kv *KVServer) Restore(data []byte) {
-	// Your code here
+	if len(data) < 1 {
+		return
+	}
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var m map[shardcfg.Tshid]*shard
+	if d.Decode(&m) != nil {
+		return
+	}
+	kv.mu.Lock()
+	kv.shards = m
+	kv.mu.Unlock()
+}
+
+func encodeKV(kvMap map[string]*kvRecord) []byte {
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(kvMap)
+	return w.Bytes()
+}
+
+func decodeKV(state []byte) map[string]*kvRecord {
+	if len(state) < 1 {
+		return map[string]*kvRecord{}
+	}
+	r := bytes.NewBuffer(state)
+	d := labgob.NewDecoder(r)
+	var m map[string]*kvRecord
+	if d.Decode(&m) != nil {
+		return map[string]*kvRecord{}
+	}
+	return m
 }
 
 func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
-	// Your code here
+	err, rep := kv.rsm.Submit(args)
+	if err == rpc.OK {
+		*reply = rep.(rpc.GetReply)
+		return
+	}
+	reply.Err = err
 }
 
 func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
-	// Your code here
+	err, rep := kv.rsm.Submit(args)
+	if err == rpc.OK {
+		*reply = rep.(rpc.PutReply)
+		return
+	}
+	reply.Err = err
 }
 
 // Freeze the specified shard (i.e., reject future Get/Puts for this
 // shard) and return the key/values stored in that shard.
 func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.FreezeShardReply) {
-	// Your code here
+	err, rep := kv.rsm.Submit(args)
+	if err == rpc.OK {
+		*reply = rep.(shardrpc.FreezeShardReply)
+		return
+	}
+	reply.Err = err
 }
 
 // Install the supplied state for the specified shard.
 func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrpc.InstallShardReply) {
-	// Your code here
+	err, rep := kv.rsm.Submit(args)
+	if err == rpc.OK {
+		*reply = rep.(shardrpc.InstallShardReply)
+		return
+	}
+	reply.Err = err
 }
 
 // Delete the specified shard.
 func (kv *KVServer) DeleteShard(args *shardrpc.DeleteShardArgs, reply *shardrpc.DeleteShardReply) {
-	// Your code here
+	err, rep := kv.rsm.Submit(args)
+	if err == rpc.OK {
+		*reply = rep.(shardrpc.DeleteShardReply)
+		return
+	}
+	reply.Err = err
 }
 
 // StartShardServerGrp starts a server for shardgrp `gid`.
-//
-// StartShardServerGrp() and MakeRSM() must return quickly, so they should
-// start goroutines for any long-running work.
-func StartServerShardGrp(servers []*labrpc.ClientEnd, gid tester.Tgid, me int, persister *tester.Persister, maxraftstate int) []any {
-	// call labgob.Register on structures you want
-	// Go's RPC library to marshall/unmarshall.
+func StartServerShardGrp(servers []*labrpc.ClientEnd, gid tester.Tgid, me int,
+	persister *tester.Persister, maxraftstate int) []any {
 	labgob.Register(rpc.PutArgs{})
 	labgob.Register(rpc.GetArgs{})
 	labgob.Register(shardrpc.FreezeShardArgs{})
 	labgob.Register(shardrpc.InstallShardArgs{})
 	labgob.Register(shardrpc.DeleteShardArgs{})
 	labgob.Register(rsm.Op{})
+	labgob.Register(kvRecord{})
+	labgob.Register(shard{})
+	labgob.Register(map[string]*kvRecord{})
 
-	kv := &KVServer{gid: gid, me: me}
+	kv := &KVServer{me: me, gid: gid, shards: map[shardcfg.Tshid]*shard{}}
+	// The first group initializes itself owning every shard (config
+	// NumFirst) if this is truly a fresh start.
+	if gid == shardcfg.Gid1 && len(persister.ReadRaftState()) == 0 {
+		for s := shardcfg.Tshid(0); s < shardcfg.NShards; s++ {
+			kv.shards[s] = &shard{
+				State: "active",
+				Num:   shardcfg.NumFirst,
+				KV:    map[string]*kvRecord{},
+			}
+		}
+	}
 	kv.rsm = rsm.MakeRSM(servers, me, persister, maxraftstate, kv)
-
-	// Your code here
-
 	return []any{kv, kv.rsm.Raft()}
 }
 
-func NewServer(tc *tester.TesterClnt, ends []*labrpc.ClientEnd, grp tester.Tgid, srv int, persister *tester.Persister) []any {
+func NewServer(tc *tester.TesterClnt, ends []*labrpc.ClientEnd, grp tester.Tgid,
+	srv int, persister *tester.Persister) []any {
 	return StartServerShardGrp(ends, grp, srv, persister, tester.MaxRaftState)
 }
