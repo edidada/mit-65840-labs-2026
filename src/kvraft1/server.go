@@ -12,8 +12,8 @@ import (
 )
 
 type kvRecord struct {
-	value string
-	ver   kvrpc.Tversion
+	Val string
+	Ver kvrpc.Tversion
 }
 
 type KVServer struct {
@@ -46,7 +46,7 @@ func (kv *KVServer) doGet(key string) any {
 	if !exists {
 		return kvrpc.TGetReply{Err: kvrpc.ErrNoKey}
 	}
-	return kvrpc.TGetReply{Value: rec.value, Version: rec.ver, Err: kvrpc.OK}
+	return kvrpc.TGetReply{Value: rec.Val, Version: rec.Ver, Err: kvrpc.OK}
 }
 
 func (kv *KVServer) doPut(key string, value string, version kvrpc.Tversion) any {
@@ -55,16 +55,16 @@ func (kv *KVServer) doPut(key string, value string, version kvrpc.Tversion) any 
 	rec, exists := kv.kv[key]
 	if !exists {
 		if version == 0 {
-			kv.kv[key] = &kvRecord{value: value, ver: 1}
+			kv.kv[key] = &kvRecord{Val: value, Ver: 1}
 			return kvrpc.TPutReply{Err: kvrpc.OK}
 		}
 		return kvrpc.TPutReply{Err: kvrpc.ErrNoKey}
 	}
-	if version != rec.ver {
+	if version != rec.Ver {
 		return kvrpc.TPutReply{Err: kvrpc.ErrVersion}
 	}
-	rec.value = value
-	rec.ver++
+	rec.Val = value
+	rec.Ver++
 	return kvrpc.TPutReply{Err: kvrpc.OK}
 }
 

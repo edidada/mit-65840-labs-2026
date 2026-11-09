@@ -68,6 +68,8 @@ func MakeRSM(servers []*labrpc.ClientEnd, me int, persister *tester.Persister, m
 	labgob.Register(Op{})
 	labgob.Register(kvrpc.TGetArgs{})
 	labgob.Register(kvrpc.TPutArgs{})
+	labgob.Register(kvrpc.TGetReply{})
+	labgob.Register(kvrpc.TPutReply{})
 	if !tester.UseRaftStateMachine {
 		rsm.rf = raft.Make(servers, me, persister, rsm.applyCh)
 	}
@@ -172,7 +174,15 @@ func (rsm *RSM) applier() {
 	for msg := range rsm.applyCh {
 		if msg.SnapshotValid {
 			rsm.mu.Lock()
-			rsm.sm.Restore(msg.Snapshot)
+			d := labgob.NewDecoder(bytes.NewBuffer(msg.Snapshot))
+			var results map[string]any
+			var kvBlob []byte
+			if d.Decode(&results) == nil && d.Decode(&kvBlob) == nil {
+				rsm.results = results
+				rsm.sm.Restore(kvBlob)
+			} else {
+				rsm.sm.Restore(msg.Snapshot)
+			}
 			rsm.lastApplied = msg.SnapshotIndex
 			rsm.mu.Unlock()
 			continue
@@ -212,7 +222,11 @@ func (rsm *RSM) applier() {
 		}
 		if snap {
 			rsm.mu.Lock()
-			blob := rsm.sm.Snapshot()
+			w := new(bytes.Buffer)
+			e := labgob.NewEncoder(w)
+			e.Encode(rsm.results)
+			e.Encode(rsm.sm.Snapshot())
+			blob := w.Bytes()
 			idx := rsm.lastSnapIndex
 			rsm.mu.Unlock()
 			rsm.rf.Snapshot(idx, blob)
