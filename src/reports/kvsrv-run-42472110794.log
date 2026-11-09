@@ -1,0 +1,253 @@
+﻿2026-11-08T10:36:01.9770266Z Current runner version: '2.338.2'
+2026-11-08T10:36:01.9792978Z ##[group]Runner Image Provisioner
+2026-11-08T10:36:01.9793719Z Hosted Compute Agent
+2026-11-08T10:36:01.9794317Z Version: 20261028.624
+2026-11-08T10:36:01.9794849Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-08T10:36:01.9795443Z Build Date: 2026-10-28T21:51:42Z
+2026-11-08T10:36:01.9796081Z Worker ID: {45f97b68-6632-4d13-991b-0947cc185d03}
+2026-11-08T10:36:01.9796672Z Region: westus2
+2026-11-08T10:36:01.9797168Z Cloud: Azure
+2026-11-08T10:36:01.9797726Z ##[endgroup]
+2026-11-08T10:36:01.9799219Z ##[group]Operating System
+2026-11-08T10:36:01.9799847Z Ubuntu
+2026-11-08T10:36:01.9800300Z 24.04.5
+2026-11-08T10:36:01.9800766Z LTS
+2026-11-08T10:36:01.9801272Z ##[endgroup]
+2026-11-08T10:36:01.9801790Z ##[group]Runner Image
+2026-11-08T10:36:01.9802348Z Image: ubuntu-24.04
+2026-11-08T10:36:01.9802842Z Version: 20261101.360.1
+2026-11-08T10:36:01.9804022Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-08T10:36:01.9805298Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-08T10:36:01.9806110Z ##[endgroup]
+2026-11-08T10:36:01.9807051Z ##[group]GITHUB_TOKEN Permissions
+2026-11-08T10:36:01.9809441Z Contents: read
+2026-11-08T10:36:01.9809998Z Metadata: read
+2026-11-08T10:36:01.9810544Z ##[endgroup]
+2026-11-08T10:36:01.9812370Z Secret source: Actions
+2026-11-08T10:36:01.9813218Z Cache mode: write
+2026-11-08T10:36:01.9813829Z Prepare workflow directory
+2026-11-08T10:36:02.0083863Z Prepare all required actions
+2026-11-08T10:36:02.0132608Z Getting action download info
+2026-11-08T10:36:02.3529989Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-08T10:36:02.4440788Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-11-08T10:36:02.7329924Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-08T10:36:02.9732317Z Complete job name: kvserver
+2026-11-08T10:36:03.0482820Z ##[group]Run actions/checkout@v4
+2026-11-08T10:36:03.0483478Z with:
+2026-11-08T10:36:03.0483860Z   repository: edidada/mit-65840-labs-2026
+2026-11-08T10:36:03.0487224Z   token: ***
+2026-11-08T10:36:03.0487634Z   ssh-strict: true
+2026-11-08T10:36:03.0487998Z   ssh-user: git
+2026-11-08T10:36:03.0488366Z   persist-credentials: true
+2026-11-08T10:36:03.0488902Z   clean: true
+2026-11-08T10:36:03.0489264Z   sparse-checkout-cone-mode: true
+2026-11-08T10:36:03.0489692Z   fetch-depth: 1
+2026-11-08T10:36:03.0490047Z   fetch-tags: false
+2026-11-08T10:36:03.0490405Z   show-progress: true
+2026-11-08T10:36:03.0490769Z   lfs: false
+2026-11-08T10:36:03.0491108Z   submodules: false
+2026-11-08T10:36:03.0491474Z   set-safe-directory: true
+2026-11-08T10:36:03.0491880Z   allow-unsafe-pr-checkout: false
+2026-11-08T10:36:03.0492462Z ##[endgroup]
+2026-11-08T10:36:03.2581609Z Syncing repository: edidada/mit-65840-labs-2026
+2026-11-08T10:36:03.2583891Z ##[group]Getting Git version info
+2026-11-08T10:36:03.2584758Z Working directory is '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-08T10:36:03.2585739Z [command]/usr/bin/git version
+2026-11-08T10:36:03.2654446Z git version 2.56.0
+2026-11-08T10:36:03.2673743Z ##[endgroup]
+2026-11-08T10:36:03.2687119Z Temporarily overriding HOME='/home/runner/work/_temp/a1b91aee-6955-4710-bf05-44311f3b4071' before making global git config changes
+2026-11-08T10:36:03.2688911Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T10:36:03.2692262Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T10:36:03.2743048Z Deleting the contents of '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-08T10:36:03.2747230Z ##[group]Initializing the repository
+2026-11-08T10:36:03.2751505Z [command]/usr/bin/git init /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T10:36:03.2841604Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-08T10:36:03.2843122Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-08T10:36:03.2844694Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-08T10:36:03.2845611Z hint: call:
+2026-11-08T10:36:03.2845962Z hint:
+2026-11-08T10:36:03.2846413Z hint: 	git config --global init.defaultBranch <name>
+2026-11-08T10:36:03.2846927Z hint:
+2026-11-08T10:36:03.2847401Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-08T10:36:03.2848145Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-08T10:36:03.2848897Z hint:
+2026-11-08T10:36:03.2849245Z hint: 	git branch -m <name>
+2026-11-08T10:36:03.2849737Z hint:
+2026-11-08T10:36:03.2850240Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-08T10:36:03.2855264Z Initialized empty Git repository in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/.git/
+2026-11-08T10:36:03.2865153Z [command]/usr/bin/git remote add origin https://github.com/edidada/mit-65840-labs-2026
+2026-11-08T10:36:03.2912272Z ##[endgroup]
+2026-11-08T10:36:03.2913488Z ##[group]Disabling automatic garbage collection
+2026-11-08T10:36:03.2916422Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-08T10:36:03.2947749Z ##[endgroup]
+2026-11-08T10:36:03.2948340Z ##[group]Setting up auth
+2026-11-08T10:36:03.2955000Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T10:36:03.2987885Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T10:36:03.3309146Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T10:36:03.3357129Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T10:36:03.3574494Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T10:36:03.3612744Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T10:36:03.3823662Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-08T10:36:03.3869341Z ##[endgroup]
+2026-11-08T10:36:03.3870038Z ##[group]Fetching the repository
+2026-11-08T10:36:03.3879751Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64d563321c4fc4a86effbae99e4fa9a11861b0cd:refs/remotes/origin/edidada/lab2-kvserver
+2026-11-08T10:36:03.7387432Z From https://github.com/edidada/mit-65840-labs-2026
+2026-11-08T10:36:03.7388700Z  * [new ref]         64d563321c4fc4a86effbae99e4fa9a11861b0cd -> origin/edidada/lab2-kvserver
+2026-11-08T10:36:03.7391420Z ##[endgroup]
+2026-11-08T10:36:03.7392087Z ##[group]Determining the checkout info
+2026-11-08T10:36:03.7393276Z ##[endgroup]
+2026-11-08T10:36:03.7398006Z [command]/usr/bin/git sparse-checkout disable
+2026-11-08T10:36:03.7452134Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-08T10:36:03.7490195Z ##[group]Checking out the ref
+2026-11-08T10:36:03.7493054Z [command]/usr/bin/git checkout --progress --force -B edidada/lab2-kvserver refs/remotes/origin/edidada/lab2-kvserver
+2026-11-08T10:36:03.7759888Z Switched to a new branch 'edidada/lab2-kvserver'
+2026-11-08T10:36:03.7762336Z branch 'edidada/lab2-kvserver' set up to track 'origin/edidada/lab2-kvserver'.
+2026-11-08T10:36:03.7768879Z ##[endgroup]
+2026-11-08T10:36:03.7815506Z [command]/usr/bin/git log -1 --format=%H
+2026-11-08T10:36:03.7846406Z 64d563321c4fc4a86effbae99e4fa9a11861b0cd
+2026-11-08T10:36:03.8112699Z ##[group]Run actions/setup-go@v5
+2026-11-08T10:36:03.8113373Z with:
+2026-11-08T10:36:03.8113752Z   go-version: 1.22
+2026-11-08T10:36:03.8114140Z   check-latest: false
+2026-11-08T10:36:03.8117573Z   token: ***
+2026-11-08T10:36:03.8117942Z   cache: true
+2026-11-08T10:36:03.8118315Z ##[endgroup]
+2026-11-08T10:36:03.9265775Z Setup go version spec 1.22
+2026-11-08T10:36:03.9385002Z Attempting to download 1.22...
+2026-11-08T10:36:03.9506309Z (node:2129) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T10:36:03.9595032Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T10:36:04.6492954Z matching 1.22...
+2026-11-08T10:36:04.6535956Z Acquiring 1.22.12 from https://github.com/actions/go-versions/releases/download/1.22.12-13149489080/go-1.22.12-linux-x64.tar.gz
+2026-11-08T10:36:09.4225957Z Extracting Go...
+2026-11-08T10:36:09.4334978Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/01cb034c-2411-42a2-a515-77d6dbcaabe7 -f /home/runner/work/_temp/4d07c949-42b0-447a-b563-17fa60703a9b
+2026-11-08T10:36:10.7625276Z Successfully extracted go to /home/runner/work/_temp/01cb034c-2411-42a2-a515-77d6dbcaabe7
+2026-11-08T10:36:10.7625778Z Adding to the cache ...
+2026-11-08T10:36:15.8322843Z Successfully cached go to /opt/hostedtoolcache/go/1.22.12/x64
+2026-11-08T10:36:15.8325046Z Added go to the path
+2026-11-08T10:36:15.8327307Z Successfully set up Go version 1.22
+2026-11-08T10:36:15.8550097Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-08T10:36:15.8604907Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-08T10:36:15.8652366Z /home/runner/go/pkg/mod
+2026-11-08T10:36:15.8667087Z /home/runner/.cache/go-build
+2026-11-08T10:36:15.8689684Z ##[warning]Restore cache failed: Dependencies file is not found in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026. Supported file pattern: go.sum
+2026-11-08T10:36:15.8714228Z go version go1.22.12 linux/amd64
+2026-11-08T10:36:15.8714438Z 
+2026-11-08T10:36:15.8714737Z ##[group]go env
+2026-11-08T10:36:16.1772462Z GO111MODULE=''
+2026-11-08T10:36:16.1772894Z GOARCH='amd64'
+2026-11-08T10:36:16.1773492Z GOBIN=''
+2026-11-08T10:36:16.1773922Z GOCACHE='/home/runner/.cache/go-build'
+2026-11-08T10:36:16.1774413Z GOENV='/home/runner/.config/go/env'
+2026-11-08T10:36:16.1774841Z GOEXE=''
+2026-11-08T10:36:16.1775216Z GOEXPERIMENT=''
+2026-11-08T10:36:16.1775543Z GOFLAGS=''
+2026-11-08T10:36:16.1775878Z GOHOSTARCH='amd64'
+2026-11-08T10:36:16.1776269Z GOHOSTOS='linux'
+2026-11-08T10:36:16.1776575Z GOINSECURE=''
+2026-11-08T10:36:16.1776939Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-11-08T10:36:16.1777312Z GONOPROXY=''
+2026-11-08T10:36:16.1777572Z GONOSUMDB=''
+2026-11-08T10:36:16.1777828Z GOOS='linux'
+2026-11-08T10:36:16.1778118Z GOPATH='/home/runner/go'
+2026-11-08T10:36:16.1778413Z GOPRIVATE=''
+2026-11-08T10:36:16.1778975Z GOPROXY='https://proxy.golang.org,direct'
+2026-11-08T10:36:16.1779539Z GOROOT='/opt/hostedtoolcache/go/1.22.12/x64'
+2026-11-08T10:36:16.1779979Z GOSUMDB='sum.golang.org'
+2026-11-08T10:36:16.1780307Z GOTMPDIR=''
+2026-11-08T10:36:16.1780572Z GOTOOLCHAIN='auto'
+2026-11-08T10:36:16.1781013Z GOTOOLDIR='/opt/hostedtoolcache/go/1.22.12/x64/pkg/tool/linux_amd64'
+2026-11-08T10:36:16.1781483Z GOVCS=''
+2026-11-08T10:36:16.1781734Z GOVERSION='go1.22.12'
+2026-11-08T10:36:16.1782022Z GCCGO='gccgo'
+2026-11-08T10:36:16.1782287Z GOAMD64='v1'
+2026-11-08T10:36:16.1782539Z AR='ar'
+2026-11-08T10:36:16.1782779Z CC='gcc'
+2026-11-08T10:36:16.1783021Z CXX='g++'
+2026-11-08T10:36:16.1783310Z CGO_ENABLED='1'
+2026-11-08T10:36:16.1783577Z GOMOD='/dev/null'
+2026-11-08T10:36:16.1783838Z GOWORK=''
+2026-11-08T10:36:16.1784119Z CGO_CFLAGS='-O2 -g'
+2026-11-08T10:36:16.1784408Z CGO_CPPFLAGS=''
+2026-11-08T10:36:16.1784679Z CGO_CXXFLAGS='-O2 -g'
+2026-11-08T10:36:16.1784970Z CGO_FFLAGS='-O2 -g'
+2026-11-08T10:36:16.1785211Z CGO_LDFLAGS='-O2 -g'
+2026-11-08T10:36:16.1785473Z PKG_CONFIG='pkg-config'
+2026-11-08T10:36:16.1786770Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build3918292560=/tmp/go-build -gno-record-gcc-switches'
+2026-11-08T10:36:16.1787401Z 
+2026-11-08T10:36:16.1787785Z ##[endgroup]
+2026-11-08T10:36:16.2001015Z ##[group]Run go build -o main/kvsrv1d main/kvsrv1d.go
+2026-11-08T10:36:16.2001428Z [36;1mgo build -o main/kvsrv1d main/kvsrv1d.go[0m
+2026-11-08T10:36:16.2024274Z shell: /usr/bin/bash -e {0}
+2026-11-08T10:36:16.2024528Z ##[endgroup]
+2026-11-08T10:36:16.2174002Z go: downloading github.com/anishathalye/porcupine v1.0.3
+2026-11-08T10:36:22.2530267Z ##[group]Run timeout 1080 go test -v -count=1 .
+2026-11-08T10:36:22.2530621Z [36;1mtimeout 1080 go test -v -count=1 .[0m
+2026-11-08T10:36:22.2549884Z shell: /usr/bin/bash -e {0}
+2026-11-08T10:36:22.2550104Z ##[endgroup]
+2026-11-08T10:36:24.0987696Z === RUN   TestReliablePut
+2026-11-08T10:36:24.2012443Z One client and reliable Put (reliable network)...
+2026-11-08T10:36:24.2026043Z   ... Passed --  time  0.0s #peers 1 #RPCs     5 #Ops    5
+2026-11-08T10:36:24.2035753Z --- PASS: TestReliablePut (0.10s)
+2026-11-08T10:36:24.2036185Z === RUN   TestPutConcurrentReliable
+2026-11-08T10:36:24.3061870Z Test: many clients racing to put values to the same key (reliable network)...
+2026-11-08T10:36:26.1689974Z   ... Passed --  time  1.9s #peers 1 #RPCs 12437 #Ops 24874
+2026-11-08T10:36:26.1705149Z --- PASS: TestPutConcurrentReliable (1.97s)
+2026-11-08T10:36:26.1705596Z === RUN   TestMemPutManyClientsReliable
+2026-11-08T10:36:30.4150393Z Test: memory use many put clients (reliable network)...
+2026-11-08T10:36:37.5437826Z   ... Passed --  time  7.1s #peers 1 #RPCs 20000 #Ops 20000
+2026-11-08T10:36:37.5634302Z --- PASS: TestMemPutManyClientsReliable (11.39s)
+2026-11-08T10:36:37.5634764Z === RUN   TestUnreliableNet
+2026-11-08T10:36:37.6656192Z One client (unreliable network)...
+2026-11-08T10:36:41.0050074Z   ... Passed --  time  3.3s #peers 1 #RPCs   259 #Ops  420
+2026-11-08T10:36:41.0067122Z --- PASS: TestUnreliableNet (3.44s)
+2026-11-08T10:36:41.0079022Z PASS
+2026-11-08T10:36:41.0120807Z ok  	6.5840/kvsrv1	16.916s
+2026-11-08T10:36:41.0282002Z ##[group]Run actions/upload-artifact@v4
+2026-11-08T10:36:41.0282247Z with:
+2026-11-08T10:36:41.0282417Z   name: kvsrv-results
+2026-11-08T10:36:41.0282641Z   path: src/kvsrv1/*.go
+src/kvsrv1/kvsrv-results.json
+
+2026-11-08T10:36:41.0282896Z   if-no-files-found: warn
+2026-11-08T10:36:41.0283084Z   compression-level: 6
+2026-11-08T10:36:41.0283263Z   overwrite: false
+2026-11-08T10:36:41.0283440Z   include-hidden-files: false
+2026-11-08T10:36:41.0283635Z ##[endgroup]
+2026-11-08T10:36:41.1747064Z (node:3911) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T10:36:41.1747831Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T10:36:41.1812310Z With the provided path, there will be 4 files uploaded
+2026-11-08T10:36:41.1824265Z Artifact name is valid!
+2026-11-08T10:36:41.1824777Z Root directory input is valid!
+2026-11-08T10:36:41.5478636Z Beginning upload of artifact content to blob storage
+2026-11-08T10:36:41.7195780Z (node:3911) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T10:36:42.1351029Z Uploaded bytes 3848
+2026-11-08T10:36:42.2140062Z Finished uploading artifact content to blob storage!
+2026-11-08T10:36:42.2141011Z SHA256 digest of uploaded artifact zip is 0410d969202aa9de15e70dff2a408ff1e512bf76576f94e90c5dfc34a19e504a
+2026-11-08T10:36:42.2141818Z Finalizing artifact upload
+2026-11-08T10:36:42.6407246Z Artifact kvsrv-results.zip successfully finalized. Artifact ID 13613473097
+2026-11-08T10:36:42.6409527Z Artifact kvsrv-results has been successfully uploaded! Final size is 3848 bytes. Artifact ID is 13613473097
+2026-11-08T10:36:42.6414898Z Artifact download URL: https://github.com/edidada/mit-65840-labs-2026/actions/runs/42472110794/artifacts/13613473097
+2026-11-08T10:36:42.6890025Z Post job cleanup.
+2026-11-08T10:36:42.7983678Z (node:3925) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T10:36:42.7984562Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T10:36:42.8058252Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-08T10:36:42.8112441Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-08T10:36:42.8146574Z /home/runner/go/pkg/mod
+2026-11-08T10:36:42.8181434Z /home/runner/.cache/go-build
+2026-11-08T10:36:42.8186077Z Primary key was not generated. Please check the log messages above for more errors or information
+2026-11-08T10:36:42.8401692Z Post job cleanup.
+2026-11-08T10:36:42.9212790Z [command]/usr/bin/git version
+2026-11-08T10:36:42.9239036Z git version 2.56.0
+2026-11-08T10:36:42.9289717Z Temporarily overriding HOME='/home/runner/work/_temp/7a2043c3-78b3-404b-bc77-0b503ddd5d50' before making global git config changes
+2026-11-08T10:36:42.9290880Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T10:36:42.9291774Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-08T10:36:42.9347465Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T10:36:42.9384149Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T10:36:42.9624702Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T10:36:42.9661906Z http.https://github.com/.extraheader
+2026-11-08T10:36:42.9670287Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-08T10:36:43.0391313Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T10:36:43.0625067Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T10:36:43.0668755Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T10:36:43.1032518Z Cleaning up orphan processes
+2026-11-08T10:36:43.1405014Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
