@@ -25,7 +25,6 @@ type KVServer struct {
 }
 
 func (kv *KVServer) DoOp(req any) any {
-	switch args := req.(type) {
 	switch a := req.(type) {
 	case *kvrpc.TGetArgs:
 		return kv.doGet(a.Key)
