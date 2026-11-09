@@ -559,10 +559,15 @@ func (rf *Raft) leaderAppend(server int) {
 		return
 	}
 	rf.backupNextIndex(&reply, server)
+	// A rejection whose conflict index is inside our snapshot prefix means
+	// the follower's tail diverged at every point we hold in the log: the
+	// only fix is a full InstallSnapshot, so park nextIndex at the prefix.
+	if reply.ConflictIndex <= rf.lastIncludedIndex {
+		rf.nextIndex[server] = rf.lastIncludedIndex
+	}
 }
 
-// electionEndFromTick bumps the timer whenever someone needs their
-// chance to win an election.
+// electionEndFromTick is reset whenever a valid leader message arrives.
 func (rf *Raft) resetElectionLocked() {
 	rf.electionEnd = time.Now().
 		Add(time.Duration(+(rand.Int63()%150)+300) * time.Millisecond)
