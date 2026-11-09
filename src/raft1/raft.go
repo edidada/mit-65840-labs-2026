@@ -11,7 +11,6 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
-	"os"
 	"sync"
 	"time"
 
@@ -20,24 +19,6 @@ import (
 	"6.5840/raftapi"
 	"6.5840/tester1"
 )
-
-// dbg writes one line to the daemon stderr when RAFT_DEBUG=1 so the
-// tester logs can be correlated across iterations.
-func dbg(format string, a ...interface{}) {
-	if os.Getenv("RAFT_DEBUG") == "1" {
-		fmt.Fprintf(os.Stderr, "[rf %d] "+format+"\n", append([]interface{}{dbgMe()}, a...))
-	}
-}
-
-var debugMu sync.Mutex
-
-func dbgMe() int {
-	debugMu.Lock()
-	defer debugMu.Unlock()
-	return debugMeIdx
-}
-
-var debugMeIdx int
 
 // LogRecord is an entry of the replicated log.
 type LogRecord struct {
@@ -311,7 +292,6 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.state = follower
 	rf.leaderID = args.LeaderID
 	rf.resetElectionLocked()
-	dbg("AE prev=%v pterm=%v nent=%v mylast=%v mySnapIdx=%v commit=%v", args.PrevLogIndex, args.PrevLogTerm, len(args.Entries), rf.lastLogIndex(), rf.lastIncludedIndex, rf.commitIndex)
 
 	if args.PrevLogIndex > rf.lastLogIndex() {
 		reply.ConflictIndex = rf.lastLogIndex() + 1
@@ -508,7 +488,7 @@ func (rf *Raft) leaderAppend(server int) {
 	}
 	nextIndex := rf.nextIndex[server]
 	prevIndex := nextIndex - 1
-	dbg("LA to %d next=%v mylast=%v snap=%v", server, nextIndex, rf.lastLogIndex(), rf.lastIncludedIndex)
+
 	prevTerm := rf.entryTermInternalClamp(prevIndex)
 	args := &AppendEntriesArgs{
 		Term:         term,
