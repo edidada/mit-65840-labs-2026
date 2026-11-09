@@ -321,8 +321,11 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		args.PrevLogTerm = rf.lastIncludedTerm
 	}
 
-	for i, entry := range args.Entries {
-		ind := args.PrevLogIndex + 1 + i
+	for _, entry := range args.Entries {
+		// The record carries its own authoritative index, which keeps the
+		// mapping valid when PrevLogIndex was normalised into the snapshot
+		// prefix (see the branch above).
+		ind := entry.Index
 		if ind <= rf.lastIncludedIndex {
 			continue
 		}
