@@ -2,6 +2,9 @@ package tester
 
 import (
 	//"log"
+	"log"
+	"sync"
+	"time"
 
 	"6.5840/tester1/sockrpc"
 )
@@ -43,5 +46,51 @@ type ForwardReply struct {
 func (trpc *TesterRPC) Forward(args *ForwardArgs, reply *ForwardReply) {
 	//log.Printf("%v: Forward args %v to end %q %d", trpc.Name(), args.Method, args.End, args.Id)
 	end := trpc.cfg.net.LookupEnd(args.End)
+	if end == nil {
+		log.Printf("[fwdmon] nil end %v method %v", args.End, args.Method)
+		reply.Rep, reply.Ok = nil, false
+		return
+	}
+	fwdPendAdd(args.End)
+	start := time.Now()
 	reply.Rep, reply.Ok = end.Forward(args.Method, args.Args)
+	fwdPendDone(args.End)
+	if d := time.Since(start); d > 2*time.Second {
+		log.Printf("[fwdmon back end=%v method=%v took=%v ok=%v]", args.End, args.Method, d.Truncate(time.Second), reply.Ok)
+	}
+}
+
+var (
+	fwdPendMu   sync.Mutex
+	fwdPendMap  = map[string]int64{}
+	fwdPendOnce sync.Once
+)
+
+func fwdPendAdd(end string) {
+	fwdPendMu.Lock()
+	fwdPendMap[end]++
+	fwdPendMu.Unlock()
+	fwdPendOnce.Do(func() {
+		go func() {
+			for {
+				time.Sleep(5 * time.Second)
+				fwdPendMu.Lock()
+				for end, n := range fwdPendMap {
+					if n > 0 {
+						log.Printf("[fwdmon backlog end=%v pending=%v]", end, n)
+					}
+				}
+				fwdPendMu.Unlock()
+			}
+		}()
+	})
+}
+
+func fwdPendDone(end string) {
+	fwdPendMu.Lock()
+	fwdPendMap[end]--
+	if fwdPendMap[end] == 0 {
+		delete(fwdPendMap, end)
+	}
+	fwdPendMu.Unlock()
 }

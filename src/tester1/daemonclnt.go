@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"6.5840/labrpc"
 	"6.5840/tester1/demux"
@@ -37,6 +39,8 @@ type DaemonClnt struct {
 	rpccClnt *sockrpc.RPCClnt
 	dmxclnt  *demux.DemuxClnt
 	clnt     *Clnt
+	pend     int64 // forwarded calls in flight (probe)
+	tot      int64 // forwarded calls total (probe)
 }
 
 // path to daemon's binary
@@ -83,6 +87,7 @@ func runDaemon(net *labrpc.Network, prog string, pargs []string, endName string,
 		clnt:    clnt,
 	}
 	dc.rpccClnt = sockrpc.NewRPCClnt("tester", sockctl(dc.endName))
+	go dc.forwardMonitor()
 	return dc, nil
 }
 
@@ -112,8 +117,21 @@ func (dc *DaemonClnt) waitInit() {
 
 // forward to daemon
 func (dc *DaemonClnt) forward(method string, args []byte) ([]byte, bool) {
+	atomic.AddInt64(&dc.pend, 1)
+	atomic.AddInt64(&dc.tot, 1)
+	defer atomic.AddInt64(&dc.pend, -1)
 	//log.Printf("forward to srv %q m %v l %d", dc.endName, method, len(args))
 	return dc.rpcc.RPC(method, args)
+}
+
+// forwardMonitor logs backlogged socket forwards to this daemon.
+func (dc *DaemonClnt) forwardMonitor() {
+	for {
+		time.Sleep(5 * time.Second)
+		if p := atomic.LoadInt64(&dc.pend); p > 0 {
+			log.Printf("[fwdmon %v pending=%v tot=%v]", dc.endName, p, atomic.LoadInt64(&dc.tot))
+		}
+	}
 }
 
 func (dc *DaemonClnt) checkpointPersister() *Persister {

@@ -176,7 +176,13 @@ func (e *ClientEnd) Forward(svcMeth string, args []byte) ([]byte, bool) {
 	//
 	// wait for the reply.
 	//
-	rep := <-req.replyCh
+	var rep replyMsg
+	select {
+	case rep = <-req.replyCh:
+	case <-time.After(2 * time.Second):
+		log.Printf("[labmon] endwait endname=%v method=%v pending>2s", e.endname, svcMeth)
+	rep = <-req.replyCh
+	}
 	return rep.reply, rep.ok
 }
 
@@ -321,12 +327,18 @@ func (rn *Network) processReq(req reqMsg) {
 		var reply replyMsg
 		replyOK := false
 		serverDead := false
+		startT := time.Now()
 		for replyOK == false && serverDead == false {
 			select {
 			case reply = <-ech:
 				replyOK = true
 			case <-time.After(100 * time.Millisecond):
-				serverDead = rn.isServerDead(req.endname, servername, server)
+				if serverDead = rn.isServerDead(req.endname, servername, server); !serverDead {
+					if d := time.Since(startT); d > 2*time.Second {
+						log.Printf("[labmon] pending endname=%v server=%v method=%v for=%v",
+							req.endname, servername, req.svcMeth, d.Truncate(time.Second))
+					}
+				}
 				if serverDead {
 					go func() {
 						<-ech // drain channel to let the goroutine created earlier terminate

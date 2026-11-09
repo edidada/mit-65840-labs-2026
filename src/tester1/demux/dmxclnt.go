@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"6.5840/labrpc"
 )
@@ -96,7 +97,14 @@ func (dmx *DemuxClnt) SendReceive(b []byte) ([]byte, bool, error) {
 	// Listen to the reply channel regardless of error status, so the reader
 	// thread doesn't block indefinitely trying to deliver the "TErrUnreachable"
 	// reply.
-	rep := <-ch
+	var rep reply
+	tzero := time.Now()
+	select {
+	case rep = <-ch:
+	case <-time.After(3 * time.Second):
+		log.Printf("[dmxmon %v->%v no reply after %v]", dmx.clntEnd, dmx.srvEnd, time.Since(tzero).Truncate(time.Second))
+		rep = <-ch
+	}
 	return rep.rep, rep.ok, rep.err
 }
 
