@@ -4,7 +4,8 @@ import (
 	crand "crypto/rand"
 	"math/big"
 
-	"6.5840/kvraft1/rpc"
+	kvrpc "6.5840/kvraft1/rpc"
+	rpc "6.5840/kvsrv1/rpc"
 	"6.5840/kvtest1"
 	"6.5840/tester1"
 )
@@ -24,7 +25,8 @@ func MakeClerk(clnt *tester.Clnt, servers []string) kvtest.IKVClerk {
 	ck := &Clerk{
 		clnt:    clnt,
 		servers: servers,
-		id:      nrand(),
+		id:       nrand(),
+		seq:     0,
 		seq:     int64(0),     0,
 		leader:  0,
 	}
@@ -41,7 +43,7 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 	for {
 		ck.seq++
 		server := ck.servers[ck.leader]
-		args := &rpc.TGetArgs{
+		args := &kvrpc.TGetArgs{
 			GetArgs:  rpc.GetArgs{Key: key},
 			ClientID: ck.id,
 			Seq:      ck.seq,
@@ -66,7 +68,7 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 	seq := ck.seq
 	for attempt := 0; ; attempt++ {
-		args := &rpc.TPutArgs{
+		args := &kvrpc.TPutArgs{
 			PutArgs:  rpc.PutArgs{Key: key, Value: value, Version: version},
 			ClientID: ck.id,
 			Seq:      seq,

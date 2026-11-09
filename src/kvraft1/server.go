@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"sync"
 
-	"6.5840/kvraft1/rpc"
+	kvrpc "6.5840/kvraft1/rpc"
 	"6.5840/kvraft1/rsm"
 	"6.5840/labgob"
 	"6.5840/labrpc"
 	"6.5840/tester1"
 )
 
-type kvRecord struct {
+type kvrpcRecord struct {
 	value string
-	ver   rpc.Tversion
+	ver   kvrpc.Tversion
 }
 
 type KVServer struct {
@@ -21,36 +21,36 @@ type KVServer struct {
 	rsm *rsm.RSM
 
 	mu sync.Mutex
-	kv map[string]*kvRecord
+	kv map[string]*kvrpcRecord
 }
 
 func (kv *KVServer) DoOp(req any) any {
 	switch args := req.(type) {
-	case *rpc.TGetArgs:
+	case *kvrpc.TGetArgs:
 		kv.mu.Lock()
 		defer kv.mu.Unlock()
 		rec, exists := kv.kv[args.Key]
 		if !exists {
-			return rpc.GetReply{Value: "", Version: 0, Err: rpc.ErrNoKey}
+			return kvrpc.GetReply{Value: "", Version: 0, Err: rpc.ErrNoKey}
 		}
-		return rpc.GetReply{Value: rec.value, Version: rec.ver, Err: rpc.OK}
-	case *rpc.TPutArgs:
+		return kvrpc.GetReply{Value: rec.value, Version: rec.ver, Err: rpc.OK}
+	case *kvrpc.TPutArgs:
 		kv.mu.Lock()
 		defer kv.mu.Unlock()
 		rec, exists := kv.kv[args.Key]
 		if !exists {
 			if args.Version == 0 {
-				kv.kv[args.Key] = &kvRecord{value: args.Value, ver: 1}
-				return rpc.PutReply{Err: rpc.OK}
+				kv.kv[args.Key] = &kvrpcRecord{value: args.Value, ver: 1}
+				return kvrpc.PutReply{Err: rpc.OK}
 			}
-			return rpc.PutReply{Err: rpc.ErrNoKey}
+			return kvrpc.PutReply{Err: rpc.ErrNoKey}
 		}
 		if args.Version != rec.ver {
-			return rpc.PutReply{Err: rpc.ErrVersion}
+			return kvrpc.PutReply{Err: rpc.ErrVersion}
 		}
 		rec.value = args.Value
 		rec.ver++
-		return rpc.PutReply{Err: rpc.OK}
+		return kvrpc.PutReply{Err: rpc.OK}
 	default:
 		panic("kvraft DoOp unknown request type")
 	}
@@ -69,7 +69,7 @@ func (kv *KVServer) Restore(data []byte) {
 	}
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
-	var table map[string]*kvRecord
+	var table map[string]*kvrpcRecord
 	if d.Decode(&table) != nil {
 		return
 	}
@@ -101,7 +101,7 @@ func StartKVServer(servers []*labrpc.ClientEnd, gid tester.Tgid, me int, persist
 	labgob.Register(rpc.TPutArgs{})
 	labgob.Register(rpc.TGetArgs{})
 
-	kv := &KVServer{me: me, kv: map[string]*kvRecord{}}
+	kv := &KVServer{me: me, kv: map[string]*kvrpcRecord{}}
 	kv.rsm = rsm.MakeRSM(servers, me, persister, maxraftstate, kv)
 	return []any{kv, kv.rsm.Raft()}
 }
