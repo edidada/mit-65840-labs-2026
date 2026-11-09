@@ -26,34 +26,47 @@ type KVServer struct {
 
 func (kv *KVServer) DoOp(req any) any {
 	switch args := req.(type) {
+	switch a := req.(type) {
 	case *kvrpc.TGetArgs:
-		kv.mu.Lock()
-		defer kv.mu.Unlock()
-		rec, exists := kv.kv[args.Key]
-		if !exists {
-			return kvrpc.TGetReply{Err: kvrpc.ErrNoKey}
-		}
-		return kvrpc.TGetReply{Value: rec.value, Version: rec.ver, Err: kvrpc.OK}
+		return kv.doGet(a.Key)
+	case kvrpc.TGetArgs:
+		return kv.doGet(a.Key)
 	case *kvrpc.TPutArgs:
-		kv.mu.Lock()
-		defer kv.mu.Unlock()
-		rec, exists := kv.kv[args.Key]
-		if !exists {
-			if args.Version == 0 {
-				kv.kv[args.Key] = &kvRecord{value: args.Value, ver: 1}
-				return kvrpc.TPutReply{Err: kvrpc.OK}
-			}
-			return kvrpc.TPutReply{Err: kvrpc.ErrNoKey}
-		}
-		if args.Version != rec.ver {
-			return kvrpc.TPutReply{Err: kvrpc.ErrVersion}
-		}
-		rec.value = args.Value
-		rec.ver++
-		return kvrpc.TPutReply{Err: kvrpc.OK}
+		return kv.doPut(a.Key, a.Value, a.Version)
+	case kvrpc.TPutArgs:
+		return kv.doPut(a.Key, a.Value, a.Version)
 	default:
 		panic("kvraft DoOp: unknown request type")
 	}
+}
+
+func (kv *KVServer) doGet(key string) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	rec, exists := kv.kv[key]
+	if !exists {
+		return kvrpc.TGetReply{Err: kvrpc.ErrNoKey}
+	}
+	return kvrpc.TGetReply{Value: rec.value, Version: rec.ver, Err: kvrpc.OK}
+}
+
+func (kv *KVServer) doPut(key string, value string, version kvrpc.Tversion) any {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	rec, exists := kv.kv[key]
+	if !exists {
+		if version == 0 {
+			kv.kv[key] = &kvRecord{value: value, ver: 1}
+			return kvrpc.TPutReply{Err: kvrpc.OK}
+		}
+		return kvrpc.TPutReply{Err: kvrpc.ErrNoKey}
+	}
+	if version != rec.ver {
+		return kvrpc.TPutReply{Err: kvrpc.ErrVersion}
+	}
+	rec.value = value
+	rec.ver++
+	return kvrpc.TPutReply{Err: kvrpc.OK}
 }
 
 func (kv *KVServer) Snapshot() []byte {

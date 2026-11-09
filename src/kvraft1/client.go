@@ -59,6 +59,7 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 // ErrVersion after a failed attempt means the earlier try may have
 // gone through, so the caller sees ErrMaybe.
 func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
+	ck.seq++
 	first := true
 	for {
 		args := &kvrpc.TPutArgs{Key: key, Value: value, Version: version,
@@ -68,10 +69,8 @@ func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 		if ok {
 			switch reply.Err {
 			case kvrpc.OK, kvrpc.ErrNoKey:
-				ck.seq++
 				return rpc.Err(reply.Err)
 			case kvrpc.ErrVersion:
-				ck.seq++
 				if first {
 					return rpc.ErrVersion
 				}

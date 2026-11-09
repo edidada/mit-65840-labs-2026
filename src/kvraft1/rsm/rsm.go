@@ -97,6 +97,12 @@ func (rsm *RSM) newOp(req any) Op {
 		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
 	case *kvrpc.TPutArgs:
 		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
+	case kvrpc.TGetArgs:
+		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
+		op.Req = r
+	case kvrpc.TPutArgs:
+		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
+		op.Req = r
 	}
 	return op
 }
