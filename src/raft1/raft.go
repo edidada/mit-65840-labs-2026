@@ -392,7 +392,11 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	rf.leaderID = args.LeaderID
 	rf.resetElectionLocked()
 
-	if args.LastIncludedIndex <= rf.lastIncludedIndex {
+	if args.LastIncludedIndex < rf.lastIncludedIndex {
+		return
+	}
+	if args.LastIncludedIndex == rf.lastIncludedIndex &&
+		args.LastIncludedTerm != rf.lastIncludedTerm {
 		return
 	}
 	// 3D semantics: the installed snapshot covers everything through
