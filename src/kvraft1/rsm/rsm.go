@@ -96,6 +96,14 @@ func (rsm *RSM) Raft() raftapi.Raft {
 	return rsm.rf
 }
 
+// SetTag sets this server's tracing label and propagates it to raft.
+func (rsm *RSM) SetTag(tag string) {
+	rsm.Tag = tag
+	if rsm.rf != nil {
+		rsm.rf.TraceTag(tag)
+	}
+}
+
 // who returns the tracing label for this server.
 func (rsm *RSM) who() string {
 	if rsm.Tag == "" {

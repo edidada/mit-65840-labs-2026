@@ -310,7 +310,7 @@ func StartServerShardGrp(servers []*labrpc.ClientEnd, gid tester.Tgid, me int,
 		}
 	}
 	kv.rsm = rsm.MakeRSM(servers, me, persister, maxraftstate, kv)
-	kv.rsm.Tag = fmt.Sprintf("g%d", gid)
+	kv.rsm.SetTag(fmt.Sprintf("g%d", gid))
 	log.Printf("[shard g%v/%v] started raftlen=%v snaplen=%v", gid, me, persister.RaftStateSize(), persister.SnapshotSize())
 	return []any{kv, kv.rsm.Raft()}
 }

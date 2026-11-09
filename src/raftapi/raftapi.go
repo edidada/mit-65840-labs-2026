@@ -13,6 +13,9 @@ type Raft interface {
 	// For Snaphots (3D)
 	Snapshot(index int, snapshot []byte)
 	PersistBytes() int
+
+	// Debug tracing label (no-op for servers that don't use it)
+	TraceTag(tag string)
 }
 
 // As each Raft peer becomes aware that successive log entries are

@@ -9,6 +9,7 @@ package raft
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"math/rand"
 	"sync"
@@ -33,6 +34,7 @@ type Raft struct {
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
 	persister *tester.Persister   // Object to hold this peer's persisted state
 	dbg       time.Time           // trace throttle
+	traceTag  string              // gid/me label for tracing
 	me        int                 // this peer's index into peers[]
 
 	// 3A: persistent state (Figure 2 "Persistent state on all servers")
@@ -185,6 +187,21 @@ func (rf *Raft) PersistBytes() int {
 
 // the service says it has created a snapshot that has
 // all info up to and including index.
+// TraceTag sets a tracing label (e.g., "g1/0") printed with debug logs.
+func (rf *Raft) TraceTag(tag string) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	rf.traceTag = tag
+}
+
+// traceLabel prefixes me with the optional gid tag.
+func (rf *Raft) traceLabel() string {
+	if rf.traceTag == "" {
+		return fmt.Sprintf("m%v", rf.me)
+	}
+	return rf.traceTag
+}
+
 func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -301,7 +318,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.ConflictIndex = rf.lastLogIndex() + 1
 		if time.Since(rf.dbg) > time.Second {
 			rf.dbg = time.Now()
-			log.Printf("[raft f%v t%v] reject tail prev=%v LL=%v confl=%v", rf.me, rf.currentTerm, args.PrevLogIndex, rf.lastLogIndex(), reply.ConflictIndex)
+			log.Printf("[raft g%v reject tail t%v] prev=%v LL=%v confl=%v", rf.traceLabel(), rf.currentTerm, args.PrevLogIndex, rf.lastLogIndex(), reply.ConflictIndex)
 		}
 		return
 	}
@@ -321,8 +338,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.ConflictIndex = idx
 		if time.Since(rf.dbg) > time.Second {
 			rf.dbg = time.Now()
-			log.Printf("[raft f%v t%v] reject term prev=%v PT=%v have=%v confl=%v ct=%v",
-				rf.me, rf.currentTerm, args.PrevLogIndex, args.PrevLogTerm,
+			log.Printf("[raft g%v reject term t%v] prev=%v PT=%v have=%v confl=%v ct=%v",
+				rf.traceLabel(), rf.currentTerm, args.PrevLogIndex, args.PrevLogTerm,
 				rf.entryTermInternal(args.PrevLogIndex), reply.ConflictIndex, reply.ConflictTerm)
 		}
 		return
@@ -358,7 +375,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			})
 			if time.Since(rf.dbg) > time.Second {
 				rf.dbg = time.Now()
-				log.Printf("[raft f%v t%v] truncate at %v haveT=%v newT=%v", rf.me, rf.currentTerm, ind, rec.Term, entry.Term)
+				log.Printf("[raft g%v truncate t%v] at %v haveT=%v newT=%v", rf.traceLabel(), rf.currentTerm, ind, rec.Term, entry.Term)
 			}
 		}
 	}
@@ -674,8 +691,8 @@ func (rf *Raft) ticker() {
 		isLeader := rf.state == leader
 		if isLeader && time.Since(rf.dbg) > time.Second {
 			rf.dbg = time.Now()
-			log.Printf("[raft m%v t%v] N=%v M=%v LL=%v CI=%v LA=%v snap=%v",
-				rf.me, term, rf.nextIndex, rf.matchIndex, rf.lastLogIndex(),
+			log.Printf("[raft g%v leader t%v] N=%v M=%v LL=%v CI=%v LA=%v snap=%v",
+				rf.traceLabel(), term, rf.nextIndex, rf.matchIndex, rf.lastLogIndex(),
 				rf.commitIndex, rf.lastApplied, rf.lastIncludedIndex)
 		}
 		rf.mu.Unlock()
