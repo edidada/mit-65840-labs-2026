@@ -194,6 +194,9 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 		rf.lastApplied = index
 	}
 	rf.lastIncludedTerm = snapTerm
+	// The service just wrote this snapshot itself; retire any queued
+	// entries at or below index before they can double-deliver.
+	rf.resetApplyQueue()
 	// Persist the raft state with the service's snapshot bytes stored in
 	// the persister's snapshot slot so a crash restores both halves.
 	w := new(bytes.Buffer)
