@@ -108,14 +108,21 @@ func (sck *ShardCtrler) readNext() (*shardcfg.ShardConfig, rpc.Tversion) {
 func (sck *ShardCtrler) casNext(val string) rpc.Err {
 	for {
 		_, ver, err := sck.IKVClerk.Get(KEYNEXT)
-		if err != rpc.OK {
-			return rpc.ErrNoKey
-		}
-		switch p := sck.IKVClerk.Put(KEYNEXT, val, ver); p {
+		p := rpc.ErrVersion
+		switch err {
 		case rpc.OK:
+			p = sck.IKVClerk.Put(KEYNEXT, val, ver)
+		case rpc.ErrNoKey:
+			p = sck.IKVClerk.Put(KEYNEXT, val, 0)
+		default:
+			time.Sleep(slotPoll)
+			continue
+		}
+		if val == "" && err == rpc.ErrNoKey {
+			return rpc.OK // slot already empty
+		}
+		if p == rpc.OK {
 			return rpc.OK
-		case rpc.ErrNoKey, rpc.ErrMaybe:
-			return p
 		}
 		time.Sleep(slotPoll)
 	}
