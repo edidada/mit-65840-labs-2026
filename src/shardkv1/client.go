@@ -50,8 +50,7 @@ func (ck *Clerk) refresh(key string) (tester.Tgid, *shardgrp.Clerk) {
 	for {
 		cfg := ck.sck.Query()
 		gid := cfg.Shards[s]
-		servers, ok := cfg.Groups[gid]
-		if !ok {
+		if _, ok := cfg.Groups[gid]; !ok {
 			continue
 		}
 		if ck.num != cfg.Num {
