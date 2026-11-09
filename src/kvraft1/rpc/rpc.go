@@ -1,20 +1,22 @@
 package rpc
 
-// Kvraft wire types. They carry the clerk identity (Id, Seq) on every
-// call so the rsm duplicate table can decide at-most-once replay.
-
-type Err string
-
-const (
-	OK             Err = "OK"
-	ErrNoKey       Err = "ErrNoKey"
-	ErrVersion     Err = "ErrVersion"
-	ErrMaybe       Err = "ErrMaybe"
-	ErrWrongLeader Err = "ErrWrongLeader"
-	ErrWrongGroup  Err = "ErrWrongGroup"
+import (
+	kvsrv "6.5840/kvsrv1/rpc"
 )
 
-type Tversion uint64
+// Err and Tversion are shared with the kvsrv1 wire package so typed
+// values flow without conversions between clerk and server.
+type Err = kvsrv.Err
+type Tversion = kvsrv.Tversion
+
+const (
+	OK             = kvsrv.OK
+	ErrNoKey       = kvsrv.ErrNoKey
+	ErrVersion     = kvsrv.ErrVersion
+	ErrMaybe       = kvsrv.ErrMaybe
+	ErrWrongLeader = kvsrv.ErrWrongLeader
+	ErrWrongGroup  = kvsrv.ErrWrongGroup
+)
 
 // TGetArgs is the wire form of Get, with clerk identity.
 type TGetArgs struct {
