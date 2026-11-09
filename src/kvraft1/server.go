@@ -11,9 +11,17 @@ import (
 	"6.5840/tester1"
 )
 
+type kvRecord struct {
+	value string
+	ver   rpc.Tversion
+}
+
 type KVServer struct {
 	me  int
 	rsm *rsm.RSM
+
+	mu sync.Mutex
+	kv map[string]*kvRecord
 }
 
 func (kv *KVServer) DoOp(req any) any {
