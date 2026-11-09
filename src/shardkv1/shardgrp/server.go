@@ -231,6 +231,7 @@ func decodeKV(state []byte) map[string]*kvRecord {
 
 func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
 	err, rep := kv.rsm.Submit(args)
+	log.Printf("[srv %v] Get %v -> %v", kv.me, args.Key, err)
 	if err == rpc.OK {
 		*reply = rep.(rpc.GetReply)
 		return
@@ -240,6 +241,7 @@ func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
 
 func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
 	err, rep := kv.rsm.Submit(args)
+	log.Printf("[srv %v] Put %v -> %v", kv.me, args.Key, err)
 	if err == rpc.OK {
 		*reply = rep.(rpc.PutReply)
 		return

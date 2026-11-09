@@ -135,6 +135,7 @@ func opKey(op Op) string {
 func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 	op := rsm.newOp(req)
 	key := opKey(op)
+	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.me, op.Id, op.Cloned, key)
 
 	w := &waiter{seq: op.Seq, ch: make(chan any, 1)}
 	for noLeader := 0; ; {
@@ -156,8 +157,10 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 		}
 		rsm.mu.Unlock()
 
-		_, _, isLeader := rsm.rf.Start(op)
-		if !isLeader {
+		isl := false
+		_, _, isl = rsm.rf.Start(op)
+		log.Printf("[rsm %v] Start %v leader=%v", rsm.me, op.Id, isl)
+		if !isl {
 			noLeader++
 			if noLeader > 10 {
 				return rpc.ErrWrongLeader, nil
