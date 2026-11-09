@@ -108,7 +108,7 @@ func (sck *ShardCtrler) readNext() (*shardcfg.ShardConfig, rpc.Tversion) {
 func (sck *ShardCtrler) casNext(val string) rpc.Err {
 	for {
 		_, ver, err := sck.IKVClerk.Get(KEYNEXT)
-		p := rpc.ErrVersion
+		var p rpc.Err = rpc.ErrVersion
 		switch err {
 		case rpc.OK:
 			p = sck.IKVClerk.Put(KEYNEXT, val, ver)
