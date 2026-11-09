@@ -57,6 +57,7 @@ type waiter struct {
 type RSM struct {
 	mu           sync.Mutex
 	me           int
+	Tag          string // optional group prefix for tracing
 	rf           raftapi.Raft
 	applyCh      chan raftapi.ApplyMsg
 	maxraftstate int // snapshot if log grows this big
@@ -93,6 +94,14 @@ func MakeRSM(servers []*labrpc.ClientEnd, me int, persister *tester.Persister, m
 
 func (rsm *RSM) Raft() raftapi.Raft {
 	return rsm.rf
+}
+
+// who returns the tracing label for this server.
+func (rsm *RSM) who() string {
+	if rsm.Tag == "" {
+		return strconv.Itoa(rsm.me)
+	}
+	return rsm.Tag + "/" + strconv.Itoa(rsm.me)
 }
 
 func nrand() int64 {
@@ -135,7 +144,7 @@ func opKey(op Op) string {
 func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 	op := rsm.newOp(req)
 	key := opKey(op)
-	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.me, op.Id, op.Cloned, key)
+	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.who(), op.Id, op.Cloned, key)
 
 	w := &waiter{seq: op.Seq, ch: make(chan any, 1)}
 	for noLeader := 0; ; {
@@ -157,9 +166,8 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 		}
 		rsm.mu.Unlock()
 
-		isl := false
-		_, _, isl = rsm.rf.Start(op)
-		log.Printf("[rsm %v] Start %v leader=%v", rsm.me, op.Id, isl)
+		idx, term, isl := rsm.rf.Start(op)
+		log.Printf("[rsm %v] Start %v idx=%v term=%v leader=%v", rsm.who(), op.Id, idx, term, isl)
 		if !isl {
 			noLeader++
 			if noLeader > 10 {
@@ -207,6 +215,7 @@ func (rsm *RSM) applier() {
 			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
 			continue
 		}
+		log.Printf("[rsm %v] applied idx=%v id=%v cloned=%v", rsm.who(), msg.CommandIndex, op.Id, op.Cloned)
 		key := opKey(op)
 		var rep any
 		if op.Cloned {
