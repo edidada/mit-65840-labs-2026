@@ -9,6 +9,7 @@ package raft
 
 import (
 	"bytes"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
