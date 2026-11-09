@@ -53,6 +53,7 @@ type Raft struct {
 
 	applyCh     chan raftapi.ApplyMsg
 	applyInt    chan raftapi.ApplyMsg
+	applyEpoch  int
 	electionEnd time.Time // reset whenever a valid message arrives
 	granted     int       // votes received in this term
 	leaderID    int
@@ -432,7 +433,8 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		return w.Bytes()
 	}(), args.Data)
 	// Tell the service and keep running.
-	rf.applyInt <- raftapi.ApplyMsg{
+	now := rf.applyInt
+	now <- raftapi.ApplyMsg{
 		SnapshotValid: true,
 		Snapshot:      args.Data,
 		SnapshotTerm:  args.LastIncludedTerm,
@@ -737,7 +739,8 @@ func (rf *Raft) applyCommitted() {
 			break
 		}
 		rf.lastApplied++
-		rf.applyInt <- raftapi.ApplyMsg{
+		cur := rf.applyInt
+		cur <- raftapi.ApplyMsg{
 			CommandValid: true,
 			Command:      rec.Command,
 			CommandIndex: rec.Index,
@@ -746,11 +749,38 @@ func (rf *Raft) applyCommitted() {
 }
 
 // applier forwards queued messages onto the service channel without
-// holding rf.mu.
-func (rf *Raft) applier() {
-	for msg := range rf.applyInt {
+// holding rf.mu. Epoch-aware: each snapshot install (service- or leader-
+// initiated) retires the previous queue so a stale CommandValid queued
+// before the install cannot reach the service out of order.
+func (rf *Raft) applier(epoch int) {
+	for {
+		rf.mu.Lock()
+		if rf.applyEpoch != epoch {
+			rf.mu.Unlock()
+			return
+		}
+		ch := rf.applyInt
+		rf.mu.Unlock()
+		msg, ok := <-ch
+		if !ok {
+			return
+		}
+		rf.mu.Lock()
+		if rf.applyEpoch != epoch {
+			rf.mu.Unlock()
+			return
+		}
+		rf.mu.Unlock()
 		rf.applyCh <- msg
 	}
+}
+
+// resetApplyQueue retires every queued message and hands out a fresh
+// channel plus applier epoch.
+func (rf *Raft) resetApplyQueue() {
+	rf.applyEpoch++
+	rf.applyInt = make(chan raftapi.ApplyMsg, 8192)
+	go rf.applier(rf.applyEpoch)
 }
 
 func min(a, b int) int {
@@ -785,13 +815,14 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.lastIncludedTerm = 0
 	rf.granted = 0
 	rf.applyInt = make(chan raftapi.ApplyMsg, 8192)
+	rf.applyEpoch = 0
 	rf.resetElectionLocked()
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
 	go rf.ticker()
-	go rf.applier()
+	go rf.applier(rf.applyEpoch)
 
 	return rf
 }
