@@ -18,6 +18,7 @@ package shardctrler
 // an interrupted move idempotent.
 
 import (
+	"log"
 	"time"
 
 	"6.5840/kvsrv1"
@@ -42,11 +43,13 @@ type ShardCtrler struct {
 	kvtest.IKVClerk
 
 	killed int32 // set by Kill()
+	id     string
 }
 
 // Make a ShardCltler, which stores its state in a kvsrv.
 func MakeShardCtrler(clnt *tester.Clnt) *ShardCtrler {
-	sck := &ShardCtrler{clnt: clnt}
+	sck := &ShardCtrler{clnt: clnt, id: tester.Randstring(6)}
+	log.Printf("[ctl new] %v", sck.id)
 	srv := tester.ServerName(tester.GRP0, 0)
 	sck.IKVClerk = kvsrv.MakeClerk(clnt, srv)
 	return sck
@@ -194,7 +197,7 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 				if !srcOK {
 					break
 				}
-				switch _, ferr := freezeServer(sck.clnt, srcServers, s, num); ferr {
+				switch _, ferr0 := freezeServer(sck.clnt, srcServers, s, num); ferr0 {
 				case rpc.OK:
 					deleteServer(sck.clnt, srcServers, s, num)
 				case rpc.ErrWrongGroup:
@@ -211,6 +214,7 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 			// join/move: freeze at source, install at destination,
 			// delete at source (delete only after a confirmed install)
 			state, ferr := freezeServer(sck.clnt, srcServers, s, num)
+			log.Printf("[ctl %v] shard %d %v->%v freeze err=%v len=%d", sck.id, s, sg, dg, ferr, len(state))
 			installServer(sck.clnt, dstServers, s, state, num)
 			if ferr == rpc.OK {
 				deleteServer(sck.clnt, srcServers, s, num)
@@ -228,8 +232,10 @@ func (sck *ShardCtrler) ChangeConfigTo(new *shardcfg.ShardConfig) {
 	for {
 		cur := sck.Query()
 		if cur.Num >= new.Num {
+			log.Printf("[ctl %v] done cur=%v target=%v", sck.id, cur.Num, new.Num)
 			return // superseded or already done
 		}
+		log.Printf("[ctl %v] ChangeConfigTo cur=%v target=%v", sck.id, cur.Num, new.Num)
 		if sck.finishPending() {
 			continue
 		}
@@ -248,6 +254,7 @@ func (sck *ShardCtrler) ChangeConfigTo(new *shardcfg.ShardConfig) {
 func (sck *ShardCtrler) finishPending() bool {
 	for {
 		pending, _ := sck.readNext()
+		log.Printf("[ctl %v] finishPending slot=%v", sck.id, pending != nil)
 		if pending == nil {
 			return false
 		}

@@ -2,6 +2,7 @@ package shardgrp
 
 import (
 	"bytes"
+	"log"
 	"sync"
 
 	"6.5840/kvraft1/rsm"
@@ -250,6 +251,7 @@ func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
 // shard) and return the key/values stored in that shard.
 func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.FreezeShardReply) {
 	err, rep := kv.rsm.Submit(args)
+	log.Printf("[srv %v] FreezeShard shard=%v num=%v -> err=%v", kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.FreezeShardReply)
 		return
@@ -260,6 +262,7 @@ func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.
 // Install the supplied state for the specified shard.
 func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrpc.InstallShardReply) {
 	err, rep := kv.rsm.Submit(args)
+	log.Printf("[srv %v] InstallShard shard=%v num=%v -> err=%v", kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.InstallShardReply)
 		return
@@ -270,6 +273,7 @@ func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrp
 // Delete the specified shard.
 func (kv *KVServer) DeleteShard(args *shardrpc.DeleteShardArgs, reply *shardrpc.DeleteShardReply) {
 	err, rep := kv.rsm.Submit(args)
+	log.Printf("[srv %v] DeleteShard shard=%v num=%v -> err=%v", kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.DeleteShardReply)
 		return
