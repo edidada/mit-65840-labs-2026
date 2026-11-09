@@ -19,6 +19,8 @@ jobs:
         run: go build -race -o main/raft1d main/raft1d.go
       - name: Run official Raft tests
         working-directory: src/raft1
+        env:
+          RAFT_DEBUG: '1'
         run: timeout 3600 go test -race -count=1 . -v
       - name: Upload logs
         if: always()
