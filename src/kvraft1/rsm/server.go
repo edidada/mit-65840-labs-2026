@@ -93,7 +93,7 @@ func (rs *rsmSrv) Restore(data []byte) {
 }
 
 func (rs *rsmSrv) Submit(req any) (rpc.Err, any) {
-	err, rep := rs.rsm.Submit(req)
+	err, rep := rs.rsm.Submit(0, 0, req)
 	//log.Printf("Submit %d %v %v %T", rs.me, err, rep, rep)
 	return err, rep
 }
