@@ -32,6 +32,7 @@ type Raft struct {
 	mu        sync.Mutex          // Lock to protect shared access to this peer's state
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
 	persister *tester.Persister   // Object to hold this peer's persisted state
+	dbg       time.Time           // trace throttle
 	me        int                 // this peer's index into peers[]
 
 	// 3A: persistent state (Figure 2 "Persistent state on all servers")
@@ -298,6 +299,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	if args.PrevLogIndex > rf.lastLogIndex() {
 		reply.ConflictIndex = rf.lastLogIndex() + 1
+		if time.Since(rf.dbg) > time.Second {
+			rf.dbg = time.Now()
+			log.Printf("[raft f%v t%v] reject tail prev=%v LL=%v confl=%v", rf.me, rf.currentTerm, args.PrevLogIndex, rf.lastLogIndex(), reply.ConflictIndex)
+		}
 		return
 	}
 	if args.PrevLogIndex >= rf.lastIncludedIndex &&
@@ -314,6 +319,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			idx--
 		}
 		reply.ConflictIndex = idx
+		if time.Since(rf.dbg) > time.Second {
+			rf.dbg = time.Now()
+			log.Printf("[raft f%v t%v] reject term prev=%v PT=%v have=%v confl=%v ct=%v",
+				rf.me, rf.currentTerm, args.PrevLogIndex, args.PrevLogTerm,
+				rf.entryTermInternal(args.PrevLogIndex), reply.ConflictIndex, reply.ConflictTerm)
+		}
 		return
 	}
 	if args.PrevLogIndex < rf.lastIncludedIndex {
@@ -345,6 +356,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 			rf.log = append(rf.log, LogRecord{
 				Index: ind, Term: entry.Term, Command: entry.Command,
 			})
+			if time.Since(rf.dbg) > time.Second {
+				rf.dbg = time.Now()
+				log.Printf("[raft f%v t%v] truncate at %v haveT=%v newT=%v", rf.me, rf.currentTerm, ind, rec.Term, entry.Term)
+			}
 		}
 	}
 	reply.Success = true
@@ -657,6 +672,12 @@ func (rf *Raft) ticker() {
 		}
 		term := rf.currentTerm
 		isLeader := rf.state == leader
+		if isLeader && time.Since(rf.dbg) > time.Second {
+			rf.dbg = time.Now()
+			log.Printf("[raft m%v t%v] N=%v M=%v LL=%v CI=%v LA=%v snap=%v",
+				rf.me, term, rf.nextIndex, rf.matchIndex, rf.lastLogIndex(),
+				rf.commitIndex, rf.lastApplied, rf.lastIncludedIndex)
+		}
 		rf.mu.Unlock()
 
 		if isLeader {
