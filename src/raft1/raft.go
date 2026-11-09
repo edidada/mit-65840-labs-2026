@@ -397,7 +397,11 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	// clashed simply adopts the leader's prefix wholesale.
 	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
 	rf.lastApplied = max(rf.lastApplied, args.LastIncludedIndex)
-	rf.trimLogPrefix(args.LastIncludedIndex)
+	// The follower's log tail beyond the installed snapshot belongs to
+	// earlier, possibly conflicting leaders: discard it and let the
+	// leader resend authoritative entries from lastIncludedIndex+1.
+	rf.log = nil
+	rf.lastIncludedIndex = args.LastIncludedIndex
 	rf.lastIncludedTerm = args.LastIncludedTerm
 	// The received blob becomes this peer's own snapshot state; persist
 	// both halves atomically (the service will be told via applyCh).
