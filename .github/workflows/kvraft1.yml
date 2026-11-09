@@ -1,0 +1,29 @@
+name: MIT 6.5840 Lab4 kvraft
+on:
+  push:
+    branches: [edidada/kvraft1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kvraft:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build kvraft daemon
+        working-directory: src
+        run: go build -race -o main/kvraft1d main/kvraft1d.go
+      - name: Run official kvraft tests
+        working-directory: src/kvraft1
+        run: timeout 3600 go test -race -count=1 . -v
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kvraft-results
+          path: src/kvraft1/*.go
+          if-no-files-found: warn
