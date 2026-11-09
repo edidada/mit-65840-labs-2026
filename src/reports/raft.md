@@ -2,7 +2,7 @@
 
 ## 已通过的公开验证（2026-11-09）
 
-最终验收 HEAD `e3c5998ca123a0c31f019a0f84cb66c16a4e36ce`，[Actions run 42570319165](https://github.com/edidada/mit-65840-labs-2026/actions/runs/42570319165) **全部 28 项官方 raft 测试 PASS**：
+最终验收 HEAD `1d7f33e6b7131991e15655b1d9b7ecd1ba4482dc`，[Actions run 42574136054](https://github.com/edidada/mit-65840-labs-2026/actions/runs/42574136054) **全部 28 项官方 raft 测试 PASS**：
 
 - 3A: TestInitialElection3A / TestReElection3A / TestManyElections3A（3.34–6.30 s）
 - 3B: TestBasicAgree3B / TestRPCBytes3B / TestFollowerFailure3B / TestLeaderFailure3B / TestFailAgree3B / TestFailNoAgree3B / TestConcurrentStarts3B / TestRejoin3B / TestBackup3B / TestCount3B（0.63–11.31 s）
