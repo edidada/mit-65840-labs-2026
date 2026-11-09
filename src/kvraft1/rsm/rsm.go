@@ -2,11 +2,14 @@ package rsm
 
 import (
 	"bytes"
+	crand "crypto/rand"
 	"log"
+	"math/big"
 	"strconv"
 	"sync"
 	"time"
 
+	kvrpc "6.5840/kvraft1/rpc"
 	"6.5840/kvsrv1/rpc"
 	"6.5840/labgob"
 	"6.5840/labrpc"
@@ -15,18 +18,22 @@ import (
 	"6.5840/tester1"
 )
 
-// Op is one FSM command flowing through Raft. The (Ck, Seq) pair comes
-// from the clerk's wire call, so exactly-once replay is decidable across
-// retries and restarts.
+// Op is one command flowing through Raft. Requests that carry a clerk
+// identity (lab 4B get/put) dedup on (Ck, Seq); other requests (lab 4A
+// harness ops such as Inc/Null/Dec) dedup on a random Id issued per
+// Submit call.
 type Op struct {
-	Srv int   // submitting rsm's index into peers[]
-	Ck  int64 // clerk ID supplied by the wire wrapper
-	Seq int64 // per-clerk serial number
-	Req any
+	Me     int
+	Id     int64
+	Ck     int64
+	Seq    int64
+	Cloned bool // true when Ck/Seq carry a clerk identity
+	Req    any
 }
 
 // A server that wants to replicate itself calls MakeRSM and must
-// implement the StateMachine interface.
+// implement the StateMachine interface: DoOp executes an operation,
+// Snapshot/Restore move the server's state in and out of Raft.
 type StateMachine interface {
 	DoOp(any) any
 	Snapshot() []byte
@@ -41,13 +48,14 @@ type RSM struct {
 	maxraftstate int // snapshot if log grows this big
 	sm           StateMachine
 
-	// duplicate table and waiters
-	results        map[string]any  // (Ck:Seq) -> DoOp result
-	waitCh         map[string]chan any
+	// duplicate table and waiters, keyed by op identity
+	results     map[string]any
+	waitCh      map[string]chan any
 	lastApplied    int
-	applyEpoch     int
+	lastSnapIndex  int
 }
 
+// servers[] contains the ports of the servers cooperating via Raft.
 func MakeRSM(servers []*labrpc.ClientEnd, me int, persister *tester.Persister, maxraftstate int, sm StateMachine) *RSM {
 	rsm := &RSM{
 		me:           me,
@@ -58,12 +66,12 @@ func MakeRSM(servers []*labrpc.ClientEnd, me int, persister *tester.Persister, m
 		waitCh:       map[string]chan any{},
 	}
 	labgob.Register(Op{})
-	labgob.Register(rpc.PutArgs{})
-	labgob.Register(rpc.GetArgs{})
+	labgob.Register(kvrpc.TGetArgs{})
+	labgob.Register(kvrpc.TPutArgs{})
 	if !tester.UseRaftStateMachine {
 		rsm.rf = raft.Make(servers, me, persister, rsm.applyCh)
 	}
-	go rsm.applier(0)
+	go rsm.applier()
 	return rsm
 }
 
@@ -71,109 +79,137 @@ func (rsm *RSM) Raft() raftapi.Raft {
 	return rsm.rf
 }
 
-func dedupKey(srv int, ck int64, seq int64) string {
+func nrand() int64 {
+	max := new(big.Int)
+	max.SetString("9223372036854775807", 10)
+	val, err := crand.Int(crand.Reader, max)
+	if err != nil {
+		return time.Now().UnixNano()
+	}
+	return val.Int64()
+}
+
+// newOp wraps req in an Op carrying its dedup identity.
+func (rsm *RSM) newOp(req any) Op {
+	op := Op{Me: rsm.me, Id: nrand(), Req: req}
+	switch r := req.(type) {
+	case *kvrpc.TGetArgs:
+		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
+	case *kvrpc.TPutArgs:
+		op.Ck, op.Seq, op.Cloned = r.Id, r.Seq, true
+	}
+	return op
+}
+
+func opKey(op Op) string {
 	var b bytes.Buffer
-	b.WriteString(strconv.Itoa(srv))
-	b.WriteString(":")
-	b.WriteString(strconv.FormatInt(ck, 10))
-	b.WriteString(":")
-	b.WriteString(strconv.FormatInt(seq, 10))
+	if op.Cloned {
+		b.WriteString("c:")
+		b.WriteString(strconv.FormatInt(op.Ck, 10))
+		b.WriteString(":")
+		b.WriteString(strconv.FormatInt(op.Seq, 10))
+	} else {
+		b.WriteString("h:")
+		b.WriteString(strconv.FormatInt(op.Id, 10))
+	}
 	return b.String()
 }
 
-// Submit a command carrying its clerk identity and wait for it to be
-// committed exactly once. Term changes hand ErrWrongLeader to the clerk.
-func (rsm *RSM) Submit(clk int64, seq int64, req any) (rpc.Err, any) {
-	key := dedupKey(rsm.me, clk, seq)
-	for {
+// Submit a command to Raft, and wait for it to commit. It returns
+// ErrWrongLeader if the caller should find a new leader and try again.
+func (rsm *RSM) Submit(req any) (rpc.Err, any) {
+	op := rsm.newOp(req)
+	key := opKey(op)
+
+	for noLeader := 0; ; {
 		rsm.mu.Lock()
 		if rep, ok := rsm.results[key]; ok {
 			rsm.mu.Unlock()
 			return rpc.OK, rep
 		}
-		_, isLeader := rsm.rf.GetState()
-		if !isLeader {
-			rsm.mu.Unlock()
-			return rpc.ErrWrongLeader, nil
-		}
-		ch, known := rsm.waitCh[key]
-		if !known {
+		ch := rsm.waitCh[key]
+		if ch == nil {
 			ch = make(chan any, 1)
 			rsm.waitCh[key] = ch
-			go rsm.launch(Op{Srv: rsm.me, Ck: clk, Seq: seq, Req: req})
 		}
 		rsm.mu.Unlock()
 
+		_, term, isLeader := rsm.rf.Start(op)
+		if !isLeader {
+			// The op may still be committed by whoever replicated it;
+			// wait briefly for the applier before giving up this term.
+			noLeader++
+			if noLeader > 10 {
+				return rpc.ErrWrongLeader, nil
+			}
+			select {
+			case rep := <-ch:
+				return rpc.OK, rep
+			case <-time.After(60 * time.Millisecond):
+			}
+			continue
+		}
+		noLeader = 0
 		select {
 		case rep := <-ch:
 			return rpc.OK, rep
 		case <-time.After(200 * time.Millisecond):
-			// loop around: the StateMachine may have a new leader now
+			// Re-check leadership below via the following Start call.
 		}
-	}
-}
-
-// launch keeps re-floating one op through raft while leadership holds;
-// repeated Start() calls of the same op are safe because the dedup table
-// only lets the first apply reach the FSM.
-func (rsm *RSM) launch(op Op) {
-	for attempt := 0; attempt < 12; attempt++ {
-		rsm.mu.Lock()
-		if _, seen := rsm.results[dedupKey(op.Srv, op.Ck, op.Seq)]; seen {
-			rsm.mu.Unlock()
-			return
-		}
-		_, isLeader := rsm.rf.GetState()
-		rsm.mu.Unlock()
-		if !isLeader {
-			return
-		}
-		_, _, ok := rsm.rf.Start(op)
-		if !ok {
-			return
-		}
-		time.Sleep(80 * time.Millisecond)
 	}
 }
 
 // applier consumes committed commands in order, executes unknown ones
-// exactly once, resolves waiters, and snapshots past maxraftstate.
-func (rsm *RSM) applier(epoch int) {
+// exactly once, resolves waiters, and snapshots the raft log when it
+// grows past maxraftstate.
+func (rsm *RSM) applier() {
 	for msg := range rsm.applyCh {
 		if msg.SnapshotValid {
 			rsm.mu.Lock()
-			rsm.lastApplied = msg.SnapshotIndex
 			rsm.sm.Restore(msg.Snapshot)
+			rsm.lastApplied = msg.SnapshotIndex
 			rsm.mu.Unlock()
 			continue
 		}
 		if !msg.CommandValid {
 			continue
 		}
-		op, good := msg.Command.(Op)
-		if !good {
-			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
+		rsm.mu.Lock()
+		if msg.CommandIndex <= rsm.lastApplied {
+			rsm.mu.Unlock()
 			continue
 		}
-		key := dedupKey(op.Srv, op.Ck, op.Seq)
-		rsm.mu.Lock()
+		op, isOp := msg.Command.(Op)
+		if !isOp {
+			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
+			rsm.lastApplied = msg.CommandIndex
+			rsm.mu.Unlock()
+			continue
+		}
+		key := opKey(op)
 		rep, seen := rsm.results[key]
 		if !seen {
 			rep = rsm.sm.DoOp(op.Req)
 			rsm.results[key] = rep
-			rsm.lastApplied = msg.CommandIndex
 		}
+		rsm.lastApplied = msg.CommandIndex
+		snap := rsm.maxraftstate > 0 && rsm.rf.PersistBytes() > rsm.maxraftstate
+		rsm.lastSnapIndex = msg.CommandIndex
 		waiter := rsm.waitCh[key]
-		delete(rsm.waitCh, key)
-		snap := rsm.maxraftstate > 0 && rsm.lastApplied%10 == 0 &&
-			rsm.rf.PersistBytes() > rsm.maxraftstate
 		rsm.mu.Unlock()
+
 		if waiter != nil {
-			waiter <- rep
+			select {
+			case waiter <- rep:
+			default:
+			}
 		}
 		if snap {
+			rsm.mu.Lock()
 			blob := rsm.sm.Snapshot()
-			rsm.rf.Snapshot(rsm.lastApplied, blob)
+			idx := rsm.lastSnapIndex
+			rsm.mu.Unlock()
+			rsm.rf.Snapshot(idx, blob)
 		}
 	}
 }

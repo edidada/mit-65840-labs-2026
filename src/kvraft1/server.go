@@ -11,7 +11,7 @@ import (
 	"6.5840/tester1"
 )
 
-type kvrpcRecord struct {
+type kvRecord struct {
 	value string
 	ver   kvrpc.Tversion
 }
@@ -21,7 +21,7 @@ type KVServer struct {
 	rsm *rsm.RSM
 
 	mu sync.Mutex
-	kv map[string]*kvrpcRecord
+	kv map[string]*kvRecord
 }
 
 func (kv *KVServer) DoOp(req any) any {
@@ -31,32 +31,34 @@ func (kv *KVServer) DoOp(req any) any {
 		defer kv.mu.Unlock()
 		rec, exists := kv.kv[args.Key]
 		if !exists {
-			return kvrpc.GetReply{Value: "", Version: 0, Err: rpc.ErrNoKey}
+			return kvrpc.TGetReply{Err: kvrpc.ErrNoKey}
 		}
-		return kvrpc.GetReply{Value: rec.value, Version: rec.ver, Err: rpc.OK}
+		return kvrpc.TGetReply{Value: rec.value, Version: rec.ver, Err: kvrpc.OK}
 	case *kvrpc.TPutArgs:
 		kv.mu.Lock()
 		defer kv.mu.Unlock()
 		rec, exists := kv.kv[args.Key]
 		if !exists {
 			if args.Version == 0 {
-				kv.kv[args.Key] = &kvrpcRecord{value: args.Value, ver: 1}
-				return kvrpc.PutReply{Err: rpc.OK}
+				kv.kv[args.Key] = &kvRecord{value: args.Value, ver: 1}
+				return kvrpc.TPutReply{Err: kvrpc.OK}
 			}
-			return kvrpc.PutReply{Err: rpc.ErrNoKey}
+			return kvrpc.TPutReply{Err: kvrpc.ErrNoKey}
 		}
 		if args.Version != rec.ver {
-			return kvrpc.PutReply{Err: rpc.ErrVersion}
+			return kvrpc.TPutReply{Err: kvrpc.ErrVersion}
 		}
 		rec.value = args.Value
 		rec.ver++
-		return kvrpc.PutReply{Err: rpc.OK}
+		return kvrpc.TPutReply{Err: kvrpc.OK}
 	default:
-		panic("kvraft DoOp unknown request type")
+		panic("kvraft DoOp: unknown request type")
 	}
 }
 
 func (kv *KVServer) Snapshot() []byte {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
 	w := new(bytes.Buffer)
 	e := labgob.NewEncoder(w)
 	e.Encode(kv.kv)
@@ -69,44 +71,54 @@ func (kv *KVServer) Restore(data []byte) {
 	}
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
-	var table map[string]*kvrpcRecord
+	var table map[string]*kvRecord
 	if d.Decode(&table) != nil {
 		return
 	}
-	kv.kv = table
+	kv.mu.Lock()
+	if kv.kv == nil {
+		kv.kv = map[string]*kvRecord{}
+	}
+	for k, v := range table {
+		if v != nil {
+			kv.kv[k] = v
+		}
+	}
+	kv.mu.Unlock()
 }
 
-func (kv *KVServer) Get(args *rpc.TGetArgs, reply *rpc.GetReply) {
-	err, rep := kv.rsm.Submit(args.ClientID, args.Seq, args)
-	if err == rpc.OK {
-		*reply = rep.(rpc.GetReply)
-	} else {
-		reply.Err = err
+func (kv *KVServer) Get(args *kvrpc.TGetArgs, reply *kvrpc.TGetReply) {
+	err, rep := kv.rsm.Submit(args)
+	if err == kvrpc.OK {
+		*reply = rep.(kvrpc.TGetReply)
+		return
 	}
+	reply.Err = err
 }
 
-func (kv *KVServer) Put(args *rpc.TPutArgs, reply *rpc.PutReply) {
-	err, rep := kv.rsm.Submit(args.ClientID, args.Seq, args)
-	if err == rpc.OK {
-		*reply = rep.(rpc.PutReply)
-	} else {
-		reply.Err = err
+func (kv *KVServer) Put(args *kvrpc.TPutArgs, reply *kvrpc.TPutReply) {
+	err, rep := kv.rsm.Submit(args)
+	if err == kvrpc.OK {
+		*reply = rep.(kvrpc.TPutReply)
+		return
 	}
+	reply.Err = err
 }
 
 // StartKVServer() and MakeRSM() must return quickly, so they should
 // start goroutines for any long-running work.
-func StartKVServer(servers []*labrpc.ClientEnd, gid tester.Tgid, me int, persister *tester.Persister, maxraftstate int) []any {
+func StartKVServer(servers []*labrpc.ClientEnd, gid tester.Tgid, me int,
+	persister *tester.Persister, maxraftstate int) []any {
 	labgob.Register(rsm.Op{})
-	labgob.Register(rpc.TPutArgs{})
-	labgob.Register(rpc.TGetArgs{})
+	labgob.Register(kvrpc.TGetArgs{})
+	labgob.Register(kvrpc.TPutArgs{})
 
-	kv := &KVServer{me: me, kv: map[string]*kvrpcRecord{}}
+	kv := &KVServer{me: me, kv: map[string]*kvRecord{}}
 	kv.rsm = rsm.MakeRSM(servers, me, persister, maxraftstate, kv)
 	return []any{kv, kv.rsm.Raft()}
 }
 
-// NewServer boots the tester harness view of this KVServer.
-func NewServer(tc *tester.TesterClnt, ends []*labrpc.ClientEnd, grp tester.Tgid, srv int, persister *tester.Persister) []any {
-	return StartKVServer(ends, Gid, srv, persister, tester.MaxRaftState)
+func NewServer(tc *tester.TesterClnt, ends []*labrpc.ClientEnd, grp tester.Tgid,
+	srv int, persister *tester.Persister) []any {
+	return StartKVServer(ends, grp, srv, persister, tester.MaxRaftState)
 }

@@ -10,8 +10,8 @@ import (
 	"6.5840/tester1"
 )
 
-// Clerk talks to the group; every non-idempotent call owns a (Ck, Seq)
-// pair so retries replay the same command for at-most-once handling.
+// Clerk talks to the group. Every call owns a (Id, Seq) pair so
+// retries replay the same command for at-most-once handling.
 type Clerk struct {
 	clnt    *tester.Clnt
 	servers []string
@@ -25,10 +25,9 @@ func MakeClerk(clnt *tester.Clnt, servers []string) kvtest.IKVClerk {
 	ck := &Clerk{
 		clnt:    clnt,
 		servers: servers,
-		id:       nrand(),
-		seq:     0,
-		seq:     int64(0),     0,
 		leader:  0,
+		id:      nrand(),
+		seq:     0,
 	}
 	return ck
 }
@@ -37,62 +36,51 @@ func (ck *Clerk) Leader() int {
 	return ck.leader
 }
 
-// Get fetches the current value and version for a key, retrying until
-// the answer is definitive.
+// Get fetches the current value and version for a key. Each Get uses a
+// fresh Seq so the duplicate table never replays a stale value.
 func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 	for {
 		ck.seq++
-		server := ck.servers[ck.leader]
-		args := &kvrpc.TGetArgs{
-			GetArgs:  rpc.GetArgs{Key: key},
-			ClientID: ck.id,
-			Seq:      ck.seq,
+		args := &kvrpc.TGetArgs{Key: key, Id: ck.id, Seq: ck.seq}
+		reply := &kvrpc.TGetReply{}
+		ok := ck.clnt.Call(ck.servers[ck.leader], "KVServer.Get", args, reply)
+		if ok && reply.Err == kvrpc.OK {
+			return reply.Value, reply.Version, rpc.OK
 		}
-		reply := &rpc.GetReply{}
-		ok := ck.clnt.Call(server, "KVServer.Get", args, reply)
-		if ok {
-			switch reply.Err {
-			case rpc.OK:
-				return reply.Value, reply.Version, rpc.OK
-			case rpc.ErrNoKey:
-				return "", 0, rpc.ErrNoKey
-			}
+		if ok && reply.Err == kvrpc.ErrNoKey {
+			return "", 0, rpc.ErrNoKey
 		}
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
 }
 
-// Put installs the value only when the version matches. A first-round
-// ErrVersion is definitive; the same ErrVersion on a resend means the
-// original attempt may have succeeded, so the caller sees ErrMaybe.
+// Put updates key with value only if the version matches. A
+// ErrVersion seen on the first attempt is definitive; the same
+// ErrVersion after a failed attempt means the earlier try may have
+// gone through, so the caller sees ErrMaybe.
 func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
-	seq := ck.seq
-	for attempt := 0; ; attempt++ {
-		args := &kvrpc.TPutArgs{
-			PutArgs:  rpc.PutArgs{Key: key, Value: value, Version: version},
-			ClientID: ck.id,
-			Seq:      seq,
-		}
-		reply := &rpc.PutReply{}
-		server := ck.servers[ck.leader]
-		ok := ck.clnt.Call(server, "KVServer.Put", args, reply)
+	first := true
+	for {
+		args := &kvrpc.TPutArgs{Key: key, Value: value, Version: version,
+			Id: ck.id, Seq: ck.seq}
+		reply := &kvrpc.TPutReply{}
+		ok := ck.clnt.Call(ck.servers[ck.leader], "KVServer.Put", args, reply)
 		if ok {
 			switch reply.Err {
-			case rpc.OK:
+			case kvrpc.OK, kvrpc.ErrNoKey:
 				ck.seq++
-				return rpc.OK
-			case rpc.ErrNoKey:
+				return rpc.Err(reply.Err)
+			case kvrpc.ErrVersion:
 				ck.seq++
-				return rpc.ErrNoKey
-			case rpc.ErrVersion:
-				if attempt == 0 {
-					ck.seq++
+				if first {
 					return rpc.ErrVersion
 				}
-				ck.seq++
 				return rpc.ErrMaybe
+			case kvrpc.ErrWrongLeader:
+				// same Seq stays in flight; follow the leader
 			}
 		}
+		first = false
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
 }
@@ -102,7 +90,7 @@ func nrand() int64 {
 	max.SetString("9223372036854775807", 10)
 	val, err := crand.Int(crand.Reader, max)
 	if err != nil {
-		return 0
+		panic(err)
 	}
 	return val.Int64()
 }

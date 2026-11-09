@@ -93,7 +93,7 @@ func (rs *rsmSrv) Restore(data []byte) {
 }
 
 func (rs *rsmSrv) Submit(req any) (rpc.Err, any) {
-	err, rep := rs.rsm.Submit(0, 0, req)
+	err, rep := rs.rsm.Submit(req)
 	//log.Printf("Submit %d %v %v %T", rs.me, err, rep, rep)
 	return err, rep
 }
@@ -108,7 +108,7 @@ type SubmitReply struct {
 }
 
 func (rs *rsmSrv) SubmitRPC(args *SubmitArgs, rep *SubmitReply) {
-	rep.Err, rep.Rep = rs.rsm.Submit(0, 0, args.Req)
+	rep.Err, rep.Rep = rs.rsm.Submit(args.Req)
 }
 
 type GetCounterArgs struct{}
