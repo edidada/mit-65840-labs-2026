@@ -108,7 +108,7 @@ type SubmitReply struct {
 }
 
 func (rs *rsmSrv) SubmitRPC(args *SubmitArgs, rep *SubmitReply) {
-	rep.Err, rep.Rep = rs.Submit(args.Req)
+	rep.Err, rep.Rep = rs.rsm.Submit(0, 0, args.Req)
 }
 
 type GetCounterArgs struct{}

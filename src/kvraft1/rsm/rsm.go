@@ -91,7 +91,7 @@ func (rsm *RSM) Submit(clk int64, seq int64, req any) (rpc.Err, any) {
 			rsm.mu.Unlock()
 			return rpc.OK, rep
 		}
-		term, isLeader := rsm.rf.GetState()
+		_, isLeader := rsm.rf.GetState()
 		if !isLeader {
 			rsm.mu.Unlock()
 			return rpc.ErrWrongLeader, nil
