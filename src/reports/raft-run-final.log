@@ -1,350 +1,348 @@
-﻿2026-11-09T05:58:48.4866937Z Current runner version: '2.338.2'
-2026-11-09T05:58:48.4891317Z ##[group]Runner Image Provisioner
-2026-11-09T05:58:48.4892606Z Hosted Compute Agent
-2026-11-09T05:58:48.4893324Z Version: 20261028.624
-2026-11-09T05:58:48.4893990Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
-2026-11-09T05:58:48.4894755Z Build Date: 2026-10-28T21:51:42Z
-2026-11-09T05:58:48.4895472Z Worker ID: {94d5cc01-8696-4e32-9bad-949736848c22}
-2026-11-09T05:58:48.4896194Z Region: northcentralus
-2026-11-09T05:58:48.4896823Z Cloud: Azure
-2026-11-09T05:58:48.4897399Z ##[endgroup]
-2026-11-09T05:58:48.4898893Z ##[group]Operating System
-2026-11-09T05:58:48.4899635Z Ubuntu
-2026-11-09T05:58:48.4900197Z 24.04.5
-2026-11-09T05:58:48.4900760Z LTS
-2026-11-09T05:58:48.4901316Z ##[endgroup]
-2026-11-09T05:58:48.4902273Z ##[group]Runner Image
-2026-11-09T05:58:48.4903043Z Image: ubuntu-24.04
-2026-11-09T05:58:48.4903619Z Version: 20261101.360.1
-2026-11-09T05:58:48.4904979Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
-2026-11-09T05:58:48.4906524Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
-2026-11-09T05:58:48.4907569Z ##[endgroup]
-2026-11-09T05:58:48.4908667Z ##[group]GITHUB_TOKEN Permissions
-2026-11-09T05:58:48.4911085Z Contents: read
-2026-11-09T05:58:48.4912888Z Metadata: read
-2026-11-09T05:58:48.4914050Z ##[endgroup]
-2026-11-09T05:58:48.4917002Z Secret source: Actions
-2026-11-09T05:58:48.4918348Z Cache mode: write
-2026-11-09T05:58:48.4919067Z Prepare workflow directory
-2026-11-09T05:58:48.5263994Z Prepare all required actions
-2026-11-09T05:58:48.5313656Z Getting action download info
-2026-11-09T05:58:48.7710812Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
-2026-11-09T05:58:48.9133811Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
-2026-11-09T05:58:49.2270007Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
-2026-11-09T05:58:49.4900528Z Complete job name: raft
-2026-11-09T05:58:49.5792688Z ##[group]Run actions/checkout@v4
-2026-11-09T05:58:49.5793637Z with:
-2026-11-09T05:58:49.5794113Z   repository: edidada/mit-65840-labs-2026
-2026-11-09T05:58:49.5797770Z   token: ***
-2026-11-09T05:58:49.5798198Z   ssh-strict: true
-2026-11-09T05:58:49.5798636Z   ssh-user: git
-2026-11-09T05:58:49.5799101Z   persist-credentials: true
-2026-11-09T05:58:49.5799593Z   clean: true
-2026-11-09T05:58:49.5800040Z   sparse-checkout-cone-mode: true
-2026-11-09T05:58:49.5800567Z   fetch-depth: 1
-2026-11-09T05:58:49.5801011Z   fetch-tags: false
-2026-11-09T05:58:49.5801454Z   show-progress: true
-2026-11-09T05:58:49.5802114Z   lfs: false
-2026-11-09T05:58:49.5802534Z   submodules: false
-2026-11-09T05:58:49.5802988Z   set-safe-directory: true
-2026-11-09T05:58:49.5803501Z   allow-unsafe-pr-checkout: false
-2026-11-09T05:58:49.5804283Z ##[endgroup]
-2026-11-09T05:58:50.3300644Z Syncing repository: edidada/mit-65840-labs-2026
-2026-11-09T05:58:50.3303452Z ##[group]Getting Git version info
-2026-11-09T05:58:50.3304569Z Working directory is '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
-2026-11-09T05:58:50.3306572Z [command]/usr/bin/git version
-2026-11-09T05:58:50.3595722Z git version 2.56.0
-2026-11-09T05:58:50.3621615Z ##[endgroup]
-2026-11-09T05:58:50.3638904Z Temporarily overriding HOME='/home/runner/work/_temp/663a9ca2-1c90-4ec8-971e-ec5b4c769d96' before making global git config changes
-2026-11-09T05:58:50.3641783Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-09T05:58:50.3646851Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
-2026-11-09T05:58:50.3709479Z Deleting the contents of '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
-2026-11-09T05:58:50.3715674Z ##[group]Initializing the repository
-2026-11-09T05:58:50.3719402Z [command]/usr/bin/git init /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
-2026-11-09T05:58:50.4082295Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-11-09T05:58:50.4085031Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-11-09T05:58:50.4087564Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-11-09T05:58:50.4089490Z hint: call:
-2026-11-09T05:58:50.4090313Z hint:
-2026-11-09T05:58:50.4091428Z hint: 	git config --global init.defaultBranch <name>
-2026-11-09T05:58:50.4093177Z hint:
-2026-11-09T05:58:50.4094546Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-11-09T05:58:50.4097229Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-11-09T05:58:50.4099302Z hint:
-2026-11-09T05:58:50.4100169Z hint: 	git branch -m <name>
-2026-11-09T05:58:50.4101254Z hint:
-2026-11-09T05:58:50.4105888Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-11-09T05:58:50.4109371Z Initialized empty Git repository in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/.git/
-2026-11-09T05:58:50.4114991Z [command]/usr/bin/git remote add origin https://github.com/edidada/mit-65840-labs-2026
-2026-11-09T05:58:50.4182657Z ##[endgroup]
-2026-11-09T05:58:50.4184431Z ##[group]Disabling automatic garbage collection
-2026-11-09T05:58:50.4186364Z [command]/usr/bin/git config --local gc.auto 0
-2026-11-09T05:58:50.4237446Z ##[endgroup]
-2026-11-09T05:58:50.4239342Z ##[group]Setting up auth
-2026-11-09T05:58:50.4245421Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-09T05:58:50.4607268Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-09T05:58:50.5035548Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-09T05:58:50.5087141Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-09T05:58:50.5385108Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-09T05:58:50.5433905Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-09T05:58:50.5712401Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-11-09T05:58:50.5760009Z ##[endgroup]
-2026-11-09T05:58:50.5773796Z ##[group]Fetching the repository
-2026-11-09T05:58:50.5776625Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e3c5998ca123a0c31f019a0f84cb66c16a4e36ce:refs/remotes/origin/edidada/raft
-2026-11-09T05:58:50.9655357Z From https://github.com/edidada/mit-65840-labs-2026
-2026-11-09T05:58:50.9657151Z  * [new ref]         e3c5998ca123a0c31f019a0f84cb66c16a4e36ce -> origin/edidada/raft
-2026-11-09T05:58:50.9661281Z ##[endgroup]
-2026-11-09T05:58:50.9662767Z ##[group]Determining the checkout info
-2026-11-09T05:58:50.9665881Z ##[endgroup]
-2026-11-09T05:58:50.9673823Z [command]/usr/bin/git sparse-checkout disable
-2026-11-09T05:58:50.9736865Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
-2026-11-09T05:58:50.9777468Z ##[group]Checking out the ref
-2026-11-09T05:58:50.9781557Z [command]/usr/bin/git checkout --progress --force -B edidada/raft refs/remotes/origin/edidada/raft
-2026-11-09T05:58:51.0197893Z Switched to a new branch 'edidada/raft'
-2026-11-09T05:58:51.0204693Z branch 'edidada/raft' set up to track 'origin/edidada/raft'.
-2026-11-09T05:58:51.0210968Z ##[endgroup]
-2026-11-09T05:58:51.0313690Z [command]/usr/bin/git log -1 --format=%H
-2026-11-09T05:58:51.0321457Z e3c5998ca123a0c31f019a0f84cb66c16a4e36ce
-2026-11-09T05:58:51.0794451Z ##[group]Run actions/setup-go@v5
-2026-11-09T05:58:51.0795567Z with:
-2026-11-09T05:58:51.0796583Z   go-version: 1.22
-2026-11-09T05:58:51.0797469Z   check-latest: false
-2026-11-09T05:58:51.0806657Z   token: ***
-2026-11-09T05:58:51.0807514Z   cache: true
-2026-11-09T05:58:51.0808347Z ##[endgroup]
-2026-11-09T05:58:51.2266609Z Setup go version spec 1.22
-2026-11-09T05:58:51.2560477Z Attempting to download 1.22...
-2026-11-09T05:58:51.2735043Z (node:2335) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-2026-11-09T05:58:51.2739767Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-11-09T05:58:51.8950186Z matching 1.22...
-2026-11-09T05:58:51.9000175Z Acquiring 1.22.12 from https://github.com/actions/go-versions/releases/download/1.22.12-13149489080/go-1.22.12-linux-x64.tar.gz
-2026-11-09T05:59:02.2415927Z Extracting Go...
-2026-11-09T05:59:02.2549228Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/d673e5f0-37d0-4d8e-9540-916dd957bc84 -f /home/runner/work/_temp/e4cb74af-e70d-4d6b-b3b7-168b419d834b
-2026-11-09T05:59:03.8571743Z Successfully extracted go to /home/runner/work/_temp/d673e5f0-37d0-4d8e-9540-916dd957bc84
-2026-11-09T05:59:03.8573217Z Adding to the cache ...
-2026-11-09T05:59:08.0810858Z Successfully cached go to /opt/hostedtoolcache/go/1.22.12/x64
-2026-11-09T05:59:08.0814849Z Added go to the path
-2026-11-09T05:59:08.0818045Z Successfully set up Go version 1.22
-2026-11-09T05:59:08.1055100Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
-2026-11-09T05:59:08.1111788Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
-2026-11-09T05:59:08.1166287Z /home/runner/go/pkg/mod
-2026-11-09T05:59:08.1183527Z /home/runner/.cache/go-build
-2026-11-09T05:59:08.1217046Z ##[warning]Restore cache failed: Dependencies file is not found in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026. Supported file pattern: go.sum
-2026-11-09T05:59:08.1248806Z go version go1.22.12 linux/amd64
-2026-11-09T05:59:08.1249059Z 
-2026-11-09T05:59:08.1249374Z ##[group]go env
-2026-11-09T05:59:08.2670776Z GO111MODULE=''
-2026-11-09T05:59:08.2671302Z GOARCH='amd64'
-2026-11-09T05:59:08.2671692Z GOBIN=''
-2026-11-09T05:59:08.2672383Z GOCACHE='/home/runner/.cache/go-build'
-2026-11-09T05:59:08.2672938Z GOENV='/home/runner/.config/go/env'
-2026-11-09T05:59:08.2673391Z GOEXE=''
-2026-11-09T05:59:08.2673761Z GOEXPERIMENT=''
-2026-11-09T05:59:08.2674145Z GOFLAGS=''
-2026-11-09T05:59:08.2674506Z GOHOSTARCH='amd64'
-2026-11-09T05:59:08.2674903Z GOHOSTOS='linux'
-2026-11-09T05:59:08.2675284Z GOINSECURE=''
-2026-11-09T05:59:08.2675703Z GOMODCACHE='/home/runner/go/pkg/mod'
-2026-11-09T05:59:08.2676183Z GONOPROXY=''
-2026-11-09T05:59:08.2676531Z GONOSUMDB=''
-2026-11-09T05:59:08.2676877Z GOOS='linux'
-2026-11-09T05:59:08.2677231Z GOPATH='/home/runner/go'
-2026-11-09T05:59:08.2677612Z GOPRIVATE=''
-2026-11-09T05:59:08.2678030Z GOPROXY='https://proxy.golang.org,direct'
-2026-11-09T05:59:08.2678638Z GOROOT='/opt/hostedtoolcache/go/1.22.12/x64'
-2026-11-09T05:59:08.2679230Z GOSUMDB='sum.golang.org'
-2026-11-09T05:59:08.2679681Z GOTMPDIR=''
-2026-11-09T05:59:08.2680082Z GOTOOLCHAIN='auto'
-2026-11-09T05:59:08.2680627Z GOTOOLDIR='/opt/hostedtoolcache/go/1.22.12/x64/pkg/tool/linux_amd64'
-2026-11-09T05:59:08.2681222Z GOVCS=''
-2026-11-09T05:59:08.2681534Z GOVERSION='go1.22.12'
-2026-11-09T05:59:08.2682205Z GCCGO='gccgo'
-2026-11-09T05:59:08.2682538Z GOAMD64='v1'
-2026-11-09T05:59:08.2682856Z AR='ar'
-2026-11-09T05:59:08.2683139Z CC='gcc'
-2026-11-09T05:59:08.2683425Z CXX='g++'
-2026-11-09T05:59:08.2683722Z CGO_ENABLED='1'
-2026-11-09T05:59:08.2684074Z GOMOD='/dev/null'
-2026-11-09T05:59:08.2684401Z GOWORK=''
-2026-11-09T05:59:08.2684732Z CGO_CFLAGS='-O2 -g'
-2026-11-09T05:59:08.2685093Z CGO_CPPFLAGS=''
-2026-11-09T05:59:08.2685436Z CGO_CXXFLAGS='-O2 -g'
-2026-11-09T05:59:08.2685795Z CGO_FFLAGS='-O2 -g'
-2026-11-09T05:59:08.2686158Z CGO_LDFLAGS='-O2 -g'
-2026-11-09T05:59:08.2686535Z PKG_CONFIG='pkg-config'
-2026-11-09T05:59:08.2688087Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build1978347507=/tmp/go-build -gno-record-gcc-switches'
-2026-11-09T05:59:08.2689226Z 
-2026-11-09T05:59:08.2689714Z ##[endgroup]
-2026-11-09T05:59:08.2924324Z ##[group]Run go build -race -o main/raft1d main/raft1d.go
-2026-11-09T05:59:08.2924830Z [36;1mgo build -race -o main/raft1d main/raft1d.go[0m
-2026-11-09T05:59:08.2949650Z shell: /usr/bin/bash -e {0}
-2026-11-09T05:59:08.2949949Z ##[endgroup]
-2026-11-09T05:59:08.3078988Z go: downloading github.com/anishathalye/porcupine v1.0.3
-2026-11-09T05:59:17.0817536Z ##[group]Run timeout 3600 go test -race -count=1 . -v
-2026-11-09T05:59:17.0817977Z [36;1mtimeout 3600 go test -race -count=1 . -v[0m
-2026-11-09T05:59:17.0839301Z shell: /usr/bin/bash -e {0}
-2026-11-09T05:59:17.0839571Z ##[endgroup]
-2026-11-09T05:59:19.4782942Z === RUN   TestInitialElection3A
-2026-11-09T05:59:19.7946476Z Test (3A): initial election (reliable network)...
-2026-11-09T05:59:22.8035934Z   ... Passed --  time  3.0s #peers 3 #RPCs   156 #Ops    0
-2026-11-09T05:59:22.8171049Z --- PASS: TestInitialElection3A (3.34s)
-2026-11-09T05:59:22.8172038Z === RUN   TestReElection3A
-2026-11-09T05:59:23.1331471Z Test (3A): election after network failure (reliable network)...
-2026-11-09T05:59:27.6899919Z   ... Passed --  time  4.6s #peers 3 #RPCs   292 #Ops    0
-2026-11-09T05:59:27.7056837Z --- PASS: TestReElection3A (4.89s)
-2026-11-09T05:59:27.7057745Z === RUN   TestManyElections3A
-2026-11-09T05:59:28.5408128Z Test (3A): multiple elections (reliable network)...
-2026-11-09T05:59:33.9646427Z   ... Passed --  time  5.4s #peers 7 #RPCs  1350 #Ops    0
-2026-11-09T05:59:34.0024466Z --- PASS: TestManyElections3A (6.30s)
-2026-11-09T05:59:34.0025179Z === RUN   TestBasicAgree3B
-2026-11-09T05:59:34.3155038Z Test (3B): basic agreement (reliable network)...
-2026-11-09T05:59:34.6231591Z   ... Passed --  time  0.3s #peers 3 #RPCs    18 #Ops    3
-2026-11-09T05:59:34.6348614Z --- PASS: TestBasicAgree3B (0.63s)
-2026-11-09T05:59:34.6349215Z === RUN   TestRPCBytes3B
-2026-11-09T05:59:34.9498737Z Test (3B): RPC byte count (reliable network)...
-2026-11-09T05:59:35.5478472Z   ... Passed --  time  0.6s #peers 3 #RPCs    50 #Ops   11
-2026-11-09T05:59:35.5649091Z --- PASS: TestRPCBytes3B (0.93s)
-2026-11-09T05:59:35.5650269Z === RUN   TestFollowerFailure3B
-2026-11-09T05:59:35.8786245Z Test (3B): test progressive failure of followers (reliable network)...
-2026-11-09T05:59:40.2013071Z   ... Passed --  time  4.3s #peers 3 #RPCs   266 #Ops    3
-2026-11-09T05:59:40.2169042Z --- PASS: TestFollowerFailure3B (4.65s)
-2026-11-09T05:59:40.2169800Z === RUN   TestLeaderFailure3B
-2026-11-09T05:59:40.5309276Z Test (3B): test failure of leaders (reliable network)...
-2026-11-09T05:59:45.2048000Z   ... Passed --  time  4.7s #peers 3 #RPCs   458 #Ops    3
-2026-11-09T05:59:45.2237320Z --- PASS: TestLeaderFailure3B (5.01s)
-2026-11-09T05:59:45.2237876Z === RUN   TestFailAgree3B
-2026-11-09T05:59:45.5395109Z Test (3B): agreement after follower reconnects (reliable network)...
-2026-11-09T05:59:48.4868421Z   ... Passed --  time  2.9s #peers 3 #RPCs   180 #Ops    7
-2026-11-09T05:59:48.5029946Z --- PASS: TestFailAgree3B (3.28s)
-2026-11-09T05:59:48.5030457Z === RUN   TestFailNoAgree3B
-2026-11-09T05:59:49.1278680Z Test (3B): no agreement if too many followers disconnect (reliable network)...
-2026-11-09T05:59:52.2764230Z   ... Passed --  time  3.1s #peers 5 #RPCs   420 #Ops    2
-2026-11-09T05:59:52.2997514Z --- PASS: TestFailNoAgree3B (3.80s)
-2026-11-09T05:59:52.2998224Z === RUN   TestConcurrentStarts3B
-2026-11-09T05:59:52.6142534Z Test (3B): concurrent Start()s (reliable network)...
-2026-11-09T05:59:53.1693615Z   ... Passed --  time  0.6s #peers 3 #RPCs    36 #Ops    0
-2026-11-09T05:59:53.1820929Z --- PASS: TestConcurrentStarts3B (0.88s)
-2026-11-09T05:59:53.1822019Z === RUN   TestRejoin3B
-2026-11-09T05:59:53.4958879Z Test (3B): rejoin of partitioned leader (reliable network)...
-2026-11-09T05:59:57.1521668Z   ... Passed --  time  3.7s #peers 3 #RPCs   332 #Ops    4
-2026-11-09T05:59:57.1684412Z --- PASS: TestRejoin3B (3.99s)
-2026-11-09T05:59:57.1685104Z === RUN   TestBackup3B
-2026-11-09T05:59:57.6930293Z Test (3B): leader backs up quickly over incorrect follower logs (reliable network)...
-2026-11-09T06:00:08.4335492Z   ... Passed --  time 10.7s #peers 5 #RPCs  2784 #Ops  102
-2026-11-09T06:00:08.4803221Z --- PASS: TestBackup3B (11.31s)
-2026-11-09T06:00:08.4803752Z === RUN   TestCount3B
-2026-11-09T06:00:08.7932584Z Test (3B): RPC counts aren't too high (reliable network)...
-2026-11-09T06:00:10.8141635Z   ... Passed --  time  2.0s #peers 3 #RPCs   124 #Ops    0
-2026-11-09T06:00:10.8277233Z --- PASS: TestCount3B (2.35s)
-2026-11-09T06:00:10.8277789Z === RUN   TestPersist13C
-2026-11-09T06:00:11.1416683Z Test (3C): basic persistence (reliable network)...
-2026-11-09T06:00:14.6184509Z   ... Passed --  time  3.5s #peers 3 #RPCs   134 #Ops    6
-2026-11-09T06:00:14.6310338Z --- PASS: TestPersist13C (3.80s)
-2026-11-09T06:00:14.6310843Z === RUN   TestPersist23C
-2026-11-09T06:00:15.1538703Z Test (3C): more persistence (reliable network)...
-2026-11-09T06:00:28.3334088Z   ... Passed --  time 13.2s #peers 5 #RPCs   668 #Ops   16
-2026-11-09T06:00:28.3535892Z --- PASS: TestPersist23C (13.72s)
-2026-11-09T06:00:28.3536265Z === RUN   TestPersist33C
-2026-11-09T06:00:28.6678267Z Test (3C): partitioned leader and one follower crash, leader restarts (reliable network)...
-2026-11-09T06:00:30.1514262Z   ... Passed --  time  1.5s #peers 3 #RPCs    56 #Ops    4
-2026-11-09T06:00:30.1629153Z --- PASS: TestPersist33C (1.81s)
-2026-11-09T06:00:30.1629756Z === RUN   TestFigure83C
-2026-11-09T06:00:30.6867408Z Test (3C): Figure 8 (reliable network)...
-2026-11-09T06:00:40.0150477Z 2026/11/09 06:00:40 NCYQ7k3ATdloCQCZacSX: dmxsrv.reader: clnt cFvI3aVmwQK2Puy46XG2 ReadCall err read unix /tmp/6.5840-NCYQ7k3ATdloCQCZacSX->@: read: connection reset by peer
-2026-11-09T06:00:47.5733841Z 2026/11/09 06:00:47 NCYQ7k3ATdloCQCZacSX: dmxsrv.reader: clnt Tt48mwJ3GgaHOy_41_JA ReadCall err read unix /tmp/6.5840-NCYQ7k3ATdloCQCZacSX->@: read: connection reset by peer
-2026-11-09T06:00:53.3544113Z 2026/11/09 06:00:53 NCYQ7k3ATdloCQCZacSX: dmxsrv.reader: clnt 7si0zPD_yQCUQShuNlGI ReadCall err read unix /tmp/6.5840-NCYQ7k3ATdloCQCZacSX->@: read: connection reset by peer
-2026-11-09T06:01:15.2383333Z   ... Passed --  time 44.6s #peers 5 #RPCs  2348 #Ops    2
-2026-11-09T06:01:15.2624471Z --- PASS: TestFigure83C (45.10s)
-2026-11-09T06:01:15.2625047Z === RUN   TestUnreliableAgree3C
-2026-11-09T06:01:15.9874211Z Test (3C): unreliable agreement (unreliable network)...
-2026-11-09T06:01:18.3966049Z   ... Passed --  time  2.4s #peers 5 #RPCs  1220 #Ops  246
-2026-11-09T06:01:18.4226778Z --- PASS: TestUnreliableAgree3C (3.16s)
-2026-11-09T06:01:18.4227452Z === RUN   TestFigure8Unreliable3C
-2026-11-09T06:01:18.9468750Z Test (3C): Figure 8 (unreliable) (unreliable network)...
-2026-11-09T06:02:04.2238970Z   ... Passed --  time 45.3s #peers 5 #RPCs 17129 #Ops    2
-2026-11-09T06:02:04.3411753Z --- PASS: TestFigure8Unreliable3C (45.92s)
-2026-11-09T06:02:04.3413122Z === RUN   TestReliableChurn3C
-2026-11-09T06:02:04.8628831Z Test (3C): churn (reliable network)...
-2026-11-09T06:02:21.5676172Z   ... Passed --  time 16.7s #peers 5 #RPCs  5172 #Ops    1
-2026-11-09T06:02:21.6166451Z --- PASS: TestReliableChurn3C (17.28s)
-2026-11-09T06:02:21.6167113Z === RUN   TestUnreliableChurn3C
-2026-11-09T06:02:22.1407827Z Test (3C): unreliable churn (unreliable network)...
-2026-11-09T06:02:39.0030047Z   ... Passed --  time 16.9s #peers 5 #RPCs  4685 #Ops    1
-2026-11-09T06:02:39.0522847Z --- PASS: TestUnreliableChurn3C (17.44s)
-2026-11-09T06:02:39.0523498Z === RUN   TestSnapshotBasic3D
-2026-11-09T06:02:39.3673528Z Test (3D): snapshots basic (reliable network)...
-2026-11-09T06:02:42.0979996Z   ... Passed --  time  2.7s #peers 3 #RPCs   582 #Ops   31
-2026-11-09T06:02:42.1132629Z --- PASS: TestSnapshotBasic3D (3.06s)
-2026-11-09T06:02:42.1133219Z === RUN   TestSnapshotInstall3D
-2026-11-09T06:02:42.4269222Z Test (3D): install snapshots (disconnect) (reliable network)...
-2026-11-09T06:03:13.8968337Z   ... Passed --  time 31.5s #peers 3 #RPCs  2400 #Ops   91
-2026-11-09T06:03:13.9169901Z --- PASS: TestSnapshotInstall3D (31.80s)
-2026-11-09T06:03:13.9170799Z === RUN   TestSnapshotInstallUnreliable3D
-2026-11-09T06:03:14.2310151Z Test (3D): install snapshots (disconnect) (unreliable network)...
-2026-11-09T06:03:52.2129275Z   ... Passed --  time 38.0s #peers 3 #RPCs  2822 #Ops   91
-2026-11-09T06:03:52.2352601Z --- PASS: TestSnapshotInstallUnreliable3D (38.32s)
-2026-11-09T06:03:52.2353288Z === RUN   TestSnapshotInstallCrash3D
-2026-11-09T06:03:52.5487907Z Test (3D): install snapshots (crash) (reliable network)...
-2026-11-09T06:04:19.5697272Z   ... Passed --  time 27.0s #peers 3 #RPCs  2018 #Ops   91
-2026-11-09T06:04:19.5859524Z --- PASS: TestSnapshotInstallCrash3D (27.35s)
-2026-11-09T06:04:19.5860991Z === RUN   TestSnapshotInstallUnCrash3D
-2026-11-09T06:04:19.9009025Z Test (3D): install snapshots (crash) (unreliable network)...
-2026-11-09T06:04:51.6181119Z   ... Passed --  time 31.7s #peers 3 #RPCs  2122 #Ops   91
-2026-11-09T06:04:51.6340666Z --- PASS: TestSnapshotInstallUnCrash3D (32.05s)
-2026-11-09T06:04:51.6341289Z === RUN   TestSnapshotAllCrash3D
-2026-11-09T06:04:51.9485336Z Test (3D): crash and restart all servers (unreliable network)...
-2026-11-09T06:04:58.5811348Z   ... Passed --  time  6.6s #peers 3 #RPCs   312 #Ops   48
-2026-11-09T06:04:58.5934643Z --- PASS: TestSnapshotAllCrash3D (6.96s)
-2026-11-09T06:04:58.5935361Z === RUN   TestSnapshotInit3D
-2026-11-09T06:04:58.9067096Z Test (3D): snapshot initialization after crash (unreliable network)...
-2026-11-09T06:05:01.4437973Z   ... Passed --  time  2.5s #peers 3 #RPCs   112 #Ops   14
-2026-11-09T06:05:01.4558531Z --- PASS: TestSnapshotInit3D (2.86s)
-2026-11-09T06:05:01.4559163Z PASS
-2026-11-09T06:05:02.4917517Z ok  	6.5840/raft1	343.024s
-2026-11-09T06:05:02.5258508Z ##[group]Run actions/upload-artifact@v4
-2026-11-09T06:05:02.5258811Z with:
-2026-11-09T06:05:02.5259004Z   name: raft-results
-2026-11-09T06:05:02.5259222Z   path: src/raft1/*.go
-2026-11-09T06:05:02.5259444Z   if-no-files-found: warn
-2026-11-09T06:05:02.5259678Z   compression-level: 6
-2026-11-09T06:05:02.5259888Z   overwrite: false
-2026-11-09T06:05:02.5260122Z   include-hidden-files: false
-2026-11-09T06:05:02.5260358Z ##[endgroup]
-2026-11-09T06:05:02.7327022Z (node:6997) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-2026-11-09T06:05:02.7328678Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-11-09T06:05:02.7452220Z With the provided path, there will be 6 files uploaded
-2026-11-09T06:05:02.7453820Z Artifact name is valid!
-2026-11-09T06:05:02.7454799Z Root directory input is valid!
-2026-11-09T06:05:02.9842464Z Beginning upload of artifact content to blob storage
-2026-11-09T06:05:03.0180377Z (node:6997) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
-2026-11-09T06:05:03.1665554Z Uploaded bytes 20694
-2026-11-09T06:05:03.2028868Z Finished uploading artifact content to blob storage!
-2026-11-09T06:05:03.2030146Z SHA256 digest of uploaded artifact zip is 2d5c8ba0acdd293055a15d7cfe31af1de4a7bf8973226049dd6b002917ab8015
-2026-11-09T06:05:03.2033186Z Finalizing artifact upload
-2026-11-09T06:05:03.6294463Z Artifact raft-results.zip successfully finalized. Artifact ID 13652613615
-2026-11-09T06:05:03.6295416Z Artifact raft-results has been successfully uploaded! Final size is 20694 bytes. Artifact ID is 13652613615
-2026-11-09T06:05:03.6302315Z Artifact download URL: https://github.com/edidada/mit-65840-labs-2026/actions/runs/42570319165/artifacts/13652613615
-2026-11-09T06:05:03.6509120Z Post job cleanup.
-2026-11-09T06:05:03.7820018Z (node:7010) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-2026-11-09T06:05:03.7821309Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-11-09T06:05:03.7915416Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
-2026-11-09T06:05:03.7985833Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
-2026-11-09T06:05:03.8020516Z /home/runner/go/pkg/mod
-2026-11-09T06:05:03.8046797Z /home/runner/.cache/go-build
-2026-11-09T06:05:03.8057266Z Primary key was not generated. Please check the log messages above for more errors or information
-2026-11-09T06:05:03.8331179Z Post job cleanup.
-2026-11-09T06:05:03.9267242Z [command]/usr/bin/git version
-2026-11-09T06:05:03.9320797Z git version 2.56.0
-2026-11-09T06:05:03.9368614Z Temporarily overriding HOME='/home/runner/work/_temp/c09f5fd9-8b63-4dd5-a3c2-4b40b220903a' before making global git config changes
-2026-11-09T06:05:03.9370303Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-09T06:05:03.9378016Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
-2026-11-09T06:05:03.9431021Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-09T06:05:03.9474883Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-09T06:05:03.9818361Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-09T06:05:03.9849930Z http.https://github.com/.extraheader
-2026-11-09T06:05:03.9862968Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
-2026-11-09T06:05:03.9900061Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-09T06:05:04.0173619Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-09T06:05:04.0222255Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-09T06:05:04.0627958Z Cleaning up orphan processes
-2026-11-09T06:05:04.1005937Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+﻿2026-11-09T06:37:07.2046951Z Current runner version: '2.338.2'
+2026-11-09T06:37:07.2066578Z ##[group]Runner Image Provisioner
+2026-11-09T06:37:07.2067214Z Hosted Compute Agent
+2026-11-09T06:37:07.2067648Z Version: 20261028.624
+2026-11-09T06:37:07.2068049Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-09T06:37:07.2068492Z Build Date: 2026-10-28T21:51:42Z
+2026-11-09T06:37:07.2068974Z Worker ID: {a87f9cbb-e11f-4357-a26c-16f967bdd875}
+2026-11-09T06:37:07.2069439Z Region: westus2
+2026-11-09T06:37:07.2069807Z Cloud: Azure
+2026-11-09T06:37:07.2070163Z ##[endgroup]
+2026-11-09T06:37:07.2070963Z ##[group]Operating System
+2026-11-09T06:37:07.2071446Z Ubuntu
+2026-11-09T06:37:07.2071796Z 24.04.5
+2026-11-09T06:37:07.2072146Z LTS
+2026-11-09T06:37:07.2072486Z ##[endgroup]
+2026-11-09T06:37:07.2072841Z ##[group]Runner Image
+2026-11-09T06:37:07.2073251Z Image: ubuntu-24.04
+2026-11-09T06:37:07.2073790Z Version: 20261101.360.1
+2026-11-09T06:37:07.2074629Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-09T06:37:07.2075558Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-09T06:37:07.2076199Z ##[endgroup]
+2026-11-09T06:37:07.2076911Z ##[group]GITHUB_TOKEN Permissions
+2026-11-09T06:37:07.2078609Z Contents: read
+2026-11-09T06:37:07.2078971Z Metadata: read
+2026-11-09T06:37:07.2079308Z ##[endgroup]
+2026-11-09T06:37:07.2080910Z Secret source: Actions
+2026-11-09T06:37:07.2081470Z Cache mode: write
+2026-11-09T06:37:07.2082008Z Prepare workflow directory
+2026-11-09T06:37:07.2300803Z Prepare all required actions
+2026-11-09T06:37:07.2334029Z Getting action download info
+2026-11-09T06:37:07.5635477Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-09T06:37:07.6525974Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-11-09T06:37:07.9096177Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-09T06:37:08.1360615Z Complete job name: raft
+2026-11-09T06:37:08.2016763Z ##[group]Run actions/checkout@v4
+2026-11-09T06:37:08.2017493Z with:
+2026-11-09T06:37:08.2017971Z   repository: edidada/mit-65840-labs-2026
+2026-11-09T06:37:08.2023097Z   token: ***
+2026-11-09T06:37:08.2023544Z   ssh-strict: true
+2026-11-09T06:37:08.2024191Z   ssh-user: git
+2026-11-09T06:37:08.2024664Z   persist-credentials: true
+2026-11-09T06:37:08.2025179Z   clean: true
+2026-11-09T06:37:08.2025653Z   sparse-checkout-cone-mode: true
+2026-11-09T06:37:08.2026209Z   fetch-depth: 1
+2026-11-09T06:37:08.2026656Z   fetch-tags: false
+2026-11-09T06:37:08.2027116Z   show-progress: true
+2026-11-09T06:37:08.2027594Z   lfs: false
+2026-11-09T06:37:08.2028041Z   submodules: false
+2026-11-09T06:37:08.2028524Z   set-safe-directory: true
+2026-11-09T06:37:08.2029070Z   allow-unsafe-pr-checkout: false
+2026-11-09T06:37:08.2029711Z ##[endgroup]
+2026-11-09T06:37:08.3959956Z Syncing repository: edidada/mit-65840-labs-2026
+2026-11-09T06:37:08.3962969Z ##[group]Getting Git version info
+2026-11-09T06:37:08.3964821Z Working directory is '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-09T06:37:08.3966861Z [command]/usr/bin/git version
+2026-11-09T06:37:08.4028239Z git version 2.56.0
+2026-11-09T06:37:08.4043131Z ##[endgroup]
+2026-11-09T06:37:08.4063136Z Temporarily overriding HOME='/home/runner/work/_temp/192fe1f6-0a28-42db-9906-b02ef8f04528' before making global git config changes
+2026-11-09T06:37:08.4072767Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-09T06:37:08.4075330Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-09T06:37:08.4114341Z Deleting the contents of '/home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026'
+2026-11-09T06:37:08.4135853Z ##[group]Initializing the repository
+2026-11-09T06:37:08.4137664Z [command]/usr/bin/git init /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-09T06:37:08.4242948Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-09T06:37:08.4244673Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-09T06:37:08.4245990Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-09T06:37:08.4246806Z hint: call:
+2026-11-09T06:37:08.4247217Z hint:
+2026-11-09T06:37:08.4247806Z hint: 	git config --global init.defaultBranch <name>
+2026-11-09T06:37:08.4248472Z hint:
+2026-11-09T06:37:08.4249362Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-09T06:37:08.4251001Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-09T06:37:08.4252257Z hint:
+2026-11-09T06:37:08.4252907Z hint: 	git branch -m <name>
+2026-11-09T06:37:08.4253835Z hint:
+2026-11-09T06:37:08.4254896Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-09T06:37:08.4256853Z Initialized empty Git repository in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026/.git/
+2026-11-09T06:37:08.4263031Z [command]/usr/bin/git remote add origin https://github.com/edidada/mit-65840-labs-2026
+2026-11-09T06:37:08.4343790Z ##[endgroup]
+2026-11-09T06:37:08.4345183Z ##[group]Disabling automatic garbage collection
+2026-11-09T06:37:08.4346377Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-09T06:37:08.4415228Z ##[endgroup]
+2026-11-09T06:37:08.4416616Z ##[group]Setting up auth
+2026-11-09T06:37:08.4420438Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-09T06:37:08.4469600Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-09T06:37:08.4770061Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-09T06:37:08.4810352Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-09T06:37:08.5011889Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-09T06:37:08.5055203Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-09T06:37:08.5262669Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-09T06:37:08.5310402Z ##[endgroup]
+2026-11-09T06:37:08.5311430Z ##[group]Fetching the repository
+2026-11-09T06:37:08.5319645Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +1d7f33e6b7131991e15655b1d9b7ecd1ba4482dc:refs/remotes/origin/edidada/raft
+2026-11-09T06:37:08.8510737Z From https://github.com/edidada/mit-65840-labs-2026
+2026-11-09T06:37:08.8511854Z  * [new ref]         1d7f33e6b7131991e15655b1d9b7ecd1ba4482dc -> origin/edidada/raft
+2026-11-09T06:37:08.8514498Z ##[endgroup]
+2026-11-09T06:37:08.8515296Z ##[group]Determining the checkout info
+2026-11-09T06:37:08.8516183Z ##[endgroup]
+2026-11-09T06:37:08.8521008Z [command]/usr/bin/git sparse-checkout disable
+2026-11-09T06:37:08.8577826Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-09T06:37:08.8618614Z ##[group]Checking out the ref
+2026-11-09T06:37:08.8621914Z [command]/usr/bin/git checkout --progress --force -B edidada/raft refs/remotes/origin/edidada/raft
+2026-11-09T06:37:08.8849473Z Switched to a new branch 'edidada/raft'
+2026-11-09T06:37:08.8852823Z branch 'edidada/raft' set up to track 'origin/edidada/raft'.
+2026-11-09T06:37:08.8859253Z ##[endgroup]
+2026-11-09T06:37:08.8908882Z [command]/usr/bin/git log -1 --format=%H
+2026-11-09T06:37:08.8941652Z 1d7f33e6b7131991e15655b1d9b7ecd1ba4482dc
+2026-11-09T06:37:08.9192444Z ##[group]Run actions/setup-go@v5
+2026-11-09T06:37:08.9192997Z with:
+2026-11-09T06:37:08.9193397Z   go-version: 1.22
+2026-11-09T06:37:08.9194179Z   check-latest: false
+2026-11-09T06:37:08.9198799Z   token: ***
+2026-11-09T06:37:08.9199214Z   cache: true
+2026-11-09T06:37:08.9199627Z ##[endgroup]
+2026-11-09T06:37:09.0172086Z Setup go version spec 1.22
+2026-11-09T06:37:09.0296576Z Attempting to download 1.22...
+2026-11-09T06:37:09.0382690Z (node:2372) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-09T06:37:09.0384312Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-09T06:37:09.5772513Z matching 1.22...
+2026-11-09T06:37:09.5796946Z Acquiring 1.22.12 from https://github.com/actions/go-versions/releases/download/1.22.12-13149489080/go-1.22.12-linux-x64.tar.gz
+2026-11-09T06:37:10.5262778Z Extracting Go...
+2026-11-09T06:37:10.5380975Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/24117c1b-50f8-41e3-ae27-d08cc3cd61a3 -f /home/runner/work/_temp/82c63af6-944d-44d7-b01a-2db2468bd16a
+2026-11-09T06:37:11.7579417Z Successfully extracted go to /home/runner/work/_temp/24117c1b-50f8-41e3-ae27-d08cc3cd61a3
+2026-11-09T06:37:11.7579897Z Adding to the cache ...
+2026-11-09T06:37:14.7727497Z Successfully cached go to /opt/hostedtoolcache/go/1.22.12/x64
+2026-11-09T06:37:14.7728874Z Added go to the path
+2026-11-09T06:37:14.7734389Z Successfully set up Go version 1.22
+2026-11-09T06:37:14.7933927Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-09T06:37:14.7988518Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-09T06:37:14.8044249Z /home/runner/go/pkg/mod
+2026-11-09T06:37:14.8058024Z /home/runner/.cache/go-build
+2026-11-09T06:37:14.8078655Z ##[warning]Restore cache failed: Dependencies file is not found in /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026. Supported file pattern: go.sum
+2026-11-09T06:37:14.8100804Z go version go1.22.12 linux/amd64
+2026-11-09T06:37:14.8100985Z 
+2026-11-09T06:37:14.8101194Z ##[group]go env
+2026-11-09T06:37:14.9099151Z GO111MODULE=''
+2026-11-09T06:37:14.9099503Z GOARCH='amd64'
+2026-11-09T06:37:14.9100573Z GOBIN=''
+2026-11-09T06:37:14.9101121Z GOCACHE='/home/runner/.cache/go-build'
+2026-11-09T06:37:14.9101332Z GOENV='/home/runner/.config/go/env'
+2026-11-09T06:37:14.9101587Z GOEXE=''
+2026-11-09T06:37:14.9101764Z GOEXPERIMENT=''
+2026-11-09T06:37:14.9101949Z GOFLAGS=''
+2026-11-09T06:37:14.9102128Z GOHOSTARCH='amd64'
+2026-11-09T06:37:14.9102320Z GOHOSTOS='linux'
+2026-11-09T06:37:14.9102521Z GOINSECURE=''
+2026-11-09T06:37:14.9102728Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-11-09T06:37:14.9102970Z GONOPROXY=''
+2026-11-09T06:37:14.9103151Z GONOSUMDB=''
+2026-11-09T06:37:14.9103341Z GOOS='linux'
+2026-11-09T06:37:14.9103560Z GOPATH='/home/runner/go'
+2026-11-09T06:37:14.9103944Z GOPRIVATE=''
+2026-11-09T06:37:14.9104208Z GOPROXY='https://proxy.golang.org,direct'
+2026-11-09T06:37:14.9104621Z GOROOT='/opt/hostedtoolcache/go/1.22.12/x64'
+2026-11-09T06:37:14.9104881Z GOSUMDB='sum.golang.org'
+2026-11-09T06:37:14.9105135Z GOTMPDIR=''
+2026-11-09T06:37:14.9105351Z GOTOOLCHAIN='auto'
+2026-11-09T06:37:14.9105634Z GOTOOLDIR='/opt/hostedtoolcache/go/1.22.12/x64/pkg/tool/linux_amd64'
+2026-11-09T06:37:14.9106016Z GOVCS=''
+2026-11-09T06:37:14.9106134Z GOVERSION='go1.22.12'
+2026-11-09T06:37:14.9106264Z GCCGO='gccgo'
+2026-11-09T06:37:14.9106381Z GOAMD64='v1'
+2026-11-09T06:37:14.9106492Z AR='ar'
+2026-11-09T06:37:14.9106602Z CC='gcc'
+2026-11-09T06:37:14.9106709Z CXX='g++'
+2026-11-09T06:37:14.9106821Z CGO_ENABLED='1'
+2026-11-09T06:37:14.9106942Z GOMOD='/dev/null'
+2026-11-09T06:37:14.9107060Z GOWORK=''
+2026-11-09T06:37:14.9107183Z CGO_CFLAGS='-O2 -g'
+2026-11-09T06:37:14.9107308Z CGO_CPPFLAGS=''
+2026-11-09T06:37:14.9107428Z CGO_CXXFLAGS='-O2 -g'
+2026-11-09T06:37:14.9107556Z CGO_FFLAGS='-O2 -g'
+2026-11-09T06:37:14.9107679Z CGO_LDFLAGS='-O2 -g'
+2026-11-09T06:37:14.9107813Z PKG_CONFIG='pkg-config'
+2026-11-09T06:37:14.9108566Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build2572581328=/tmp/go-build -gno-record-gcc-switches'
+2026-11-09T06:37:14.9108992Z 
+2026-11-09T06:37:14.9109403Z ##[endgroup]
+2026-11-09T06:37:14.9314732Z ##[group]Run go build -race -o main/raft1d main/raft1d.go
+2026-11-09T06:37:14.9315047Z [36;1mgo build -race -o main/raft1d main/raft1d.go[0m
+2026-11-09T06:37:14.9336074Z shell: /usr/bin/bash -e {0}
+2026-11-09T06:37:14.9336235Z ##[endgroup]
+2026-11-09T06:37:14.9464602Z go: downloading github.com/anishathalye/porcupine v1.0.3
+2026-11-09T06:37:21.2413540Z ##[group]Run timeout 3600 go test -race -count=1 . -v
+2026-11-09T06:37:21.2414021Z [36;1mtimeout 3600 go test -race -count=1 . -v[0m
+2026-11-09T06:37:21.2430384Z shell: /usr/bin/bash -e {0}
+2026-11-09T06:37:21.2430528Z ##[endgroup]
+2026-11-09T06:37:22.9107142Z === RUN   TestInitialElection3A
+2026-11-09T06:37:23.2240206Z Test (3A): initial election (reliable network)...
+2026-11-09T06:37:26.2748722Z   ... Passed --  time  3.1s #peers 3 #RPCs   158 #Ops    0
+2026-11-09T06:37:26.2871118Z --- PASS: TestInitialElection3A (3.38s)
+2026-11-09T06:37:26.2871548Z === RUN   TestReElection3A
+2026-11-09T06:37:26.5983899Z Test (3A): election after network failure (reliable network)...
+2026-11-09T06:37:31.2606847Z   ... Passed --  time  4.7s #peers 3 #RPCs   292 #Ops    0
+2026-11-09T06:37:31.2765302Z --- PASS: TestReElection3A (4.99s)
+2026-11-09T06:37:31.2765663Z === RUN   TestManyElections3A
+2026-11-09T06:37:32.1072039Z Test (3A): multiple elections (reliable network)...
+2026-11-09T06:37:37.7978723Z   ... Passed --  time  5.7s #peers 7 #RPCs  1272 #Ops    0
+2026-11-09T06:37:37.8337898Z --- PASS: TestManyElections3A (6.56s)
+2026-11-09T06:37:37.8338282Z === RUN   TestBasicAgree3B
+2026-11-09T06:37:38.1445143Z Test (3B): basic agreement (reliable network)...
+2026-11-09T06:37:38.4860943Z   ... Passed --  time  0.3s #peers 3 #RPCs    18 #Ops    3
+2026-11-09T06:37:38.4968004Z --- PASS: TestBasicAgree3B (0.66s)
+2026-11-09T06:37:38.4968336Z === RUN   TestRPCBytes3B
+2026-11-09T06:37:38.8087081Z Test (3B): RPC byte count (reliable network)...
+2026-11-09T06:37:39.5282137Z   ... Passed --  time  0.7s #peers 3 #RPCs    52 #Ops   11
+2026-11-09T06:37:39.5428195Z --- PASS: TestRPCBytes3B (1.05s)
+2026-11-09T06:37:39.5428566Z === RUN   TestFollowerFailure3B
+2026-11-09T06:37:39.8544071Z Test (3B): test progressive failure of followers (reliable network)...
+2026-11-09T06:37:44.2431251Z   ... Passed --  time  4.4s #peers 3 #RPCs   262 #Ops    3
+2026-11-09T06:37:44.2585832Z --- PASS: TestFollowerFailure3B (4.72s)
+2026-11-09T06:37:44.2586256Z === RUN   TestLeaderFailure3B
+2026-11-09T06:37:44.7721983Z Test (3B): test failure of leaders (reliable network)...
+2026-11-09T06:37:49.4804802Z   ... Passed --  time  4.7s #peers 3 #RPCs   464 #Ops    3
+2026-11-09T06:37:49.4958787Z --- PASS: TestLeaderFailure3B (5.24s)
+2026-11-09T06:37:49.4959168Z === RUN   TestFailAgree3B
+2026-11-09T06:37:49.8079285Z Test (3B): agreement after follower reconnects (reliable network)...
+2026-11-09T06:37:54.8165969Z   ... Passed --  time  5.0s #peers 3 #RPCs   280 #Ops    7
+2026-11-09T06:37:54.8315243Z --- PASS: TestFailAgree3B (5.34s)
+2026-11-09T06:37:54.8315548Z === RUN   TestFailNoAgree3B
+2026-11-09T06:37:55.4512213Z Test (3B): no agreement if too many followers disconnect (reliable network)...
+2026-11-09T06:37:58.6341173Z   ... Passed --  time  3.2s #peers 5 #RPCs   428 #Ops    2
+2026-11-09T06:37:58.6585183Z --- PASS: TestFailNoAgree3B (3.83s)
+2026-11-09T06:37:58.6585533Z === RUN   TestConcurrentStarts3B
+2026-11-09T06:37:58.9702413Z Test (3B): concurrent Start()s (reliable network)...
+2026-11-09T06:37:59.4731444Z   ... Passed --  time  0.5s #peers 3 #RPCs    32 #Ops    0
+2026-11-09T06:37:59.4840848Z --- PASS: TestConcurrentStarts3B (0.83s)
+2026-11-09T06:37:59.4841175Z === RUN   TestRejoin3B
+2026-11-09T06:37:59.7945828Z Test (3B): rejoin of partitioned leader (reliable network)...
+2026-11-09T06:38:05.6279894Z   ... Passed --  time  5.8s #peers 3 #RPCs   454 #Ops    4
+2026-11-09T06:38:05.6437422Z --- PASS: TestRejoin3B (6.16s)
+2026-11-09T06:38:05.6437766Z === RUN   TestBackup3B
+2026-11-09T06:38:06.1623527Z Test (3B): leader backs up quickly over incorrect follower logs (reliable network)...
+2026-11-09T06:38:16.3979565Z   ... Passed --  time 10.2s #peers 5 #RPCs  2728 #Ops  102
+2026-11-09T06:38:16.4383339Z --- PASS: TestBackup3B (10.79s)
+2026-11-09T06:38:16.4383820Z === RUN   TestCount3B
+2026-11-09T06:38:16.7487447Z Test (3B): RPC counts aren't too high (reliable network)...
+2026-11-09T06:38:18.8502604Z   ... Passed --  time  2.1s #peers 3 #RPCs   128 #Ops    0
+2026-11-09T06:38:18.8623354Z --- PASS: TestCount3B (2.42s)
+2026-11-09T06:38:18.8623766Z === RUN   TestPersist13C
+2026-11-09T06:38:19.1736220Z Test (3C): basic persistence (reliable network)...
+2026-11-09T06:38:22.7821963Z   ... Passed --  time  3.6s #peers 3 #RPCs   140 #Ops    6
+2026-11-09T06:38:22.7932059Z --- PASS: TestPersist13C (3.93s)
+2026-11-09T06:38:22.7932397Z === RUN   TestPersist23C
+2026-11-09T06:38:23.3140625Z Test (3C): more persistence (reliable network)...
+2026-11-09T06:38:36.8013834Z   ... Passed --  time 13.5s #peers 5 #RPCs   676 #Ops   16
+2026-11-09T06:38:36.8193910Z --- PASS: TestPersist23C (14.03s)
+2026-11-09T06:38:36.8194198Z === RUN   TestPersist33C
+2026-11-09T06:38:37.1308734Z Test (3C): partitioned leader and one follower crash, leader restarts (reliable network)...
+2026-11-09T06:38:38.4888799Z   ... Passed --  time  1.4s #peers 3 #RPCs    58 #Ops    4
+2026-11-09T06:38:38.5005300Z --- PASS: TestPersist33C (1.68s)
+2026-11-09T06:38:38.5005636Z === RUN   TestFigure83C
+2026-11-09T06:38:39.0211732Z Test (3C): Figure 8 (reliable network)...
+2026-11-09T06:38:40.8787446Z 2026/11/09 06:38:40 fUyR-mveChFYVnDDIGbY: dmxsrv.reader: clnt d4mi78sApK8dA7HCcqBf ReadCall err read unix /tmp/6.5840-fUyR-mveChFYVnDDIGbY->@: read: connection reset by peer
+2026-11-09T06:39:15.9190778Z   ... Passed --  time 36.9s #peers 5 #RPCs  1824 #Ops    2
+2026-11-09T06:39:15.9377901Z --- PASS: TestFigure83C (37.44s)
+2026-11-09T06:39:15.9378209Z === RUN   TestUnreliableAgree3C
+2026-11-09T06:39:16.4574972Z Test (3C): unreliable agreement (unreliable network)...
+2026-11-09T06:39:18.0467344Z   ... Passed --  time  1.6s #peers 5 #RPCs  1136 #Ops  246
+2026-11-09T06:39:18.0697821Z --- PASS: TestUnreliableAgree3C (2.13s)
+2026-11-09T06:39:18.0698198Z === RUN   TestFigure8Unreliable3C
+2026-11-09T06:39:18.5892056Z Test (3C): Figure 8 (unreliable) (unreliable network)...
+2026-11-09T06:40:03.0486731Z   ... Passed --  time 44.5s #peers 5 #RPCs 17327 #Ops    2
+2026-11-09T06:40:03.1836497Z --- PASS: TestFigure8Unreliable3C (45.11s)
+2026-11-09T06:40:03.1837059Z === RUN   TestReliableChurn3C
+2026-11-09T06:40:03.7044489Z Test (3C): churn (reliable network)...
+2026-11-09T06:40:20.2052247Z   ... Passed --  time 16.5s #peers 5 #RPCs  6368 #Ops    1
+2026-11-09T06:40:20.2465215Z --- PASS: TestReliableChurn3C (17.06s)
+2026-11-09T06:40:20.2465592Z === RUN   TestUnreliableChurn3C
+2026-11-09T06:40:20.7675202Z Test (3C): unreliable churn (unreliable network)...
+2026-11-09T06:40:37.1272026Z   ... Passed --  time 16.4s #peers 5 #RPCs  6208 #Ops    1
+2026-11-09T06:40:37.1668273Z --- PASS: TestUnreliableChurn3C (16.92s)
+2026-11-09T06:40:37.1668630Z === RUN   TestSnapshotBasic3D
+2026-11-09T06:40:37.5793241Z Test (3D): snapshots basic (reliable network)...
+2026-11-09T06:40:39.7592780Z   ... Passed --  time  2.2s #peers 3 #RPCs   490 #Ops   31
+2026-11-09T06:40:39.7731509Z --- PASS: TestSnapshotBasic3D (2.61s)
+2026-11-09T06:40:39.7731828Z === RUN   TestSnapshotInstall3D
+2026-11-09T06:40:40.0845269Z Test (3D): install snapshots (disconnect) (reliable network)...
+2026-11-09T06:41:14.2434587Z   ... Passed --  time 34.2s #peers 3 #RPCs  2592 #Ops   91
+2026-11-09T06:41:14.2629000Z --- PASS: TestSnapshotInstall3D (34.49s)
+2026-11-09T06:41:14.2629404Z === RUN   TestSnapshotInstallUnreliable3D
+2026-11-09T06:41:14.5750887Z Test (3D): install snapshots (disconnect) (unreliable network)...
+2026-11-09T06:41:49.9654494Z   ... Passed --  time 35.4s #peers 3 #RPCs  2628 #Ops   91
+2026-11-09T06:41:49.9838816Z --- PASS: TestSnapshotInstallUnreliable3D (35.72s)
+2026-11-09T06:41:49.9839254Z === RUN   TestSnapshotInstallCrash3D
+2026-11-09T06:41:50.2961964Z Test (3D): install snapshots (crash) (reliable network)...
+2026-11-09T06:42:16.8052629Z   ... Passed --  time 26.5s #peers 3 #RPCs  1922 #Ops   91
+2026-11-09T06:42:16.8186480Z --- PASS: TestSnapshotInstallCrash3D (26.83s)
+2026-11-09T06:42:16.8186800Z === RUN   TestSnapshotInstallUnCrash3D
+2026-11-09T06:42:17.1296965Z Test (3D): install snapshots (crash) (unreliable network)...
+2026-11-09T06:42:48.0681086Z   ... Passed --  time 30.9s #peers 3 #RPCs  2048 #Ops   91
+2026-11-09T06:42:48.0817643Z --- PASS: TestSnapshotInstallUnCrash3D (31.26s)
+2026-11-09T06:42:48.0817974Z === RUN   TestSnapshotAllCrash3D
+2026-11-09T06:42:48.3927959Z Test (3D): crash and restart all servers (unreliable network)...
+2026-11-09T06:42:54.4752679Z   ... Passed --  time  6.1s #peers 3 #RPCs   304 #Ops   48
+2026-11-09T06:42:54.4866859Z --- PASS: TestSnapshotAllCrash3D (6.40s)
+2026-11-09T06:42:54.4867226Z === RUN   TestSnapshotInit3D
+2026-11-09T06:42:54.7988765Z Test (3D): snapshot initialization after crash (unreliable network)...
+2026-11-09T06:42:57.7224568Z   ... Passed --  time  2.9s #peers 3 #RPCs   114 #Ops   14
+2026-11-09T06:42:57.7335737Z --- PASS: TestSnapshotInit3D (3.25s)
+2026-11-09T06:42:57.7336049Z PASS
+2026-11-09T06:42:58.7752746Z ok  	6.5840/raft1	335.873s
+2026-11-09T06:42:58.8093806Z ##[group]Run actions/upload-artifact@v4
+2026-11-09T06:42:58.8094027Z with:
+2026-11-09T06:42:58.8094147Z   name: raft-results
+2026-11-09T06:42:58.8094274Z   path: src/raft1/*.go
+2026-11-09T06:42:58.8094408Z   if-no-files-found: warn
+2026-11-09T06:42:58.8094546Z   compression-level: 6
+2026-11-09T06:42:58.8094671Z   overwrite: false
+2026-11-09T06:42:58.8094798Z   include-hidden-files: false
+2026-11-09T06:42:58.8094940Z ##[endgroup]
+2026-11-09T06:42:58.9435281Z (node:6974) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-09T06:42:58.9435727Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-09T06:42:58.9484056Z With the provided path, there will be 6 files uploaded
+2026-11-09T06:42:58.9488934Z Artifact name is valid!
+2026-11-09T06:42:58.9517569Z Root directory input is valid!
+2026-11-09T06:42:59.3170887Z Beginning upload of artifact content to blob storage
+2026-11-09T06:42:59.3402553Z (node:6974) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-09T06:42:59.6988074Z Uploaded bytes 20760
+2026-11-09T06:42:59.7763047Z Finished uploading artifact content to blob storage!
+2026-11-09T06:42:59.7763604Z SHA256 digest of uploaded artifact zip is 55f9042db1aa4ba31d5a6ab6b2389e53732e9931dde4273e882f5d829de452e0
+2026-11-09T06:42:59.7764513Z Finalizing artifact upload
+2026-11-09T06:43:00.1813857Z Artifact raft-results.zip successfully finalized. Artifact ID 13654812076
+2026-11-09T06:43:00.1814402Z Artifact raft-results has been successfully uploaded! Final size is 20760 bytes. Artifact ID is 13654812076
+2026-11-09T06:43:00.1819548Z Artifact download URL: https://github.com/edidada/mit-65840-labs-2026/actions/runs/42574136054/artifacts/13654812076
+2026-11-09T06:43:00.2019327Z Post job cleanup.
+2026-11-09T06:43:00.3006569Z (node:6987) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-09T06:43:00.3007023Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-09T06:43:00.3058395Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOMODCACHE
+2026-11-09T06:43:00.3099713Z [command]/opt/hostedtoolcache/go/1.22.12/x64/bin/go env GOCACHE
+2026-11-09T06:43:00.3132489Z /home/runner/go/pkg/mod
+2026-11-09T06:43:00.3146892Z /home/runner/.cache/go-build
+2026-11-09T06:43:00.3151975Z Primary key was not generated. Please check the log messages above for more errors or information
+2026-11-09T06:43:00.3349481Z Post job cleanup.
+2026-11-09T06:43:00.4080509Z [command]/usr/bin/git version
+2026-11-09T06:43:00.4145558Z git version 2.56.0
+2026-11-09T06:43:00.4182060Z Temporarily overriding HOME='/home/runner/work/_temp/8d695dfe-0afa-41b6-a6b1-484d300ce838' before making global git config changes
+2026-11-09T06:43:00.4183042Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-09T06:43:00.4190608Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mit-65840-labs-2026/mit-65840-labs-2026
+2026-11-09T06:43:00.4272917Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-09T06:43:00.4320686Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-09T06:43:00.4699312Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-09T06:43:00.4745657Z http.https://github.com/.extraheader
+2026-11-09T06:43:00.4756103Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-09T06:43:00.4861116Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-09T06:43:00.5112249Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-09T06:43:00.5166437Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-09T06:43:00.5564413Z Cleaning up orphan processes
+2026-11-09T06:43:00.5833167Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
