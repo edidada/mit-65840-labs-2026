@@ -134,7 +134,7 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 		}
 		rsm.mu.Unlock()
 
-		_, term, isLeader := rsm.rf.Start(op)
+		_, _, isLeader := rsm.rf.Start(op)
 		if !isLeader {
 			// The op may still be committed by whoever replicated it;
 			// wait briefly for the applier before giving up this term.
