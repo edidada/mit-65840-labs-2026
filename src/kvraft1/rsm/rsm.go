@@ -181,11 +181,24 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 			continue
 		}
 		noLeader = 0
-		select {
-		case rep := <-w.ch:
-			return rpc.OK, rep
-		case <-time.After(200 * time.Millisecond):
-			// loop: re-verify leadership with the next Start call
+		// The op is queued at the current term's leader. While
+		// leadership stays stable we must NOT re-append the same op:
+		// every duplicate Start floods the log (and the persisted
+		// state) and starves the applier. Keep waiting; re-Start only
+		// when the term or leadership changed, or after a long stall.
+		for stalls := 0; ; stalls++ {
+			select {
+			case rep := <-w.ch:
+				return rpc.OK, rep
+			case <-time.After(200 * time.Millisecond):
+			}
+			nowTerm, nowLeader := rsm.rf.GetState()
+			if !nowLeader || nowTerm != term {
+				break // re-queue via Start on the next outer round
+			}
+			if stalls%10 == 9 {
+				break // ~2s stall: bounded re-queue so progress survives pathological commits
+			}
 		}
 	}
 }
@@ -194,7 +207,14 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 // exactly once, resolves waiters, and snapshots the raft log when it
 // grows past maxraftstate.
 func (rsm *RSM) applier() {
+	var lastRecv time.Time
 	for msg := range rsm.applyCh {
+		now := time.Now()
+		if !lastRecv.IsZero() && now.Sub(lastRecv) > 300*time.Millisecond {
+			log.Printf("[rsm %v] apply feed gap %v before idx=%v", rsm.who(), now.Sub(lastRecv), msg.CommandIndex)
+		}
+		lastRecv = now
+		t0 := time.Now()
 		if msg.SnapshotValid {
 			rsm.installSnapshot(msg.Snapshot, msg.SnapshotIndex)
 			continue
@@ -246,6 +266,9 @@ func (rsm *RSM) applier() {
 			case notify.ch <- rep:
 			default:
 			}
+		}
+		if d := time.Since(t0); d > 100*time.Millisecond {
+			log.Printf("[rsm %v] slow apply idx=%v took %v", rsm.who(), msg.CommandIndex, d)
 		}
 		if snap {
 			rsm.takeSnapshot()

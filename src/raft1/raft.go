@@ -775,7 +775,11 @@ func (rf *Raft) applier(epoch int) {
 			return
 		}
 		rf.mu.Unlock()
+		fs := time.Now()
 		rf.applyCh <- msg
+		if d := time.Since(fs); d > 100*time.Millisecond {
+			log.Printf("[raft fwd %v] blocked %v idx=%v", rf.me, d, msg.CommandIndex)
+		}
 	}
 }
 
