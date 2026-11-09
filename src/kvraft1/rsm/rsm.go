@@ -20,14 +20,14 @@ import (
 
 // Op is one command flowing through Raft. Requests that carry a clerk
 // identity (lab 4B get/put) dedup on (Ck, Seq); other requests (lab 4A
-// harness ops such as Inc/Null/Dec) dedup on a random Id issued per
-// Submit call.
+// harness ops such as Inc/Null/Dec) are identified by a random Id per
+// Submit call and always execute.
 type Op struct {
 	Me     int
 	Id     int64
 	Ck     int64
 	Seq    int64
-	Cloned bool // true when Ck/Seq carry a clerk identity
+	Cloned bool // Ck/Seq carry a clerk identity
 	Req    any
 }
 
@@ -40,6 +40,20 @@ type StateMachine interface {
 	Restore([]byte)
 }
 
+// dupEntry holds one clerk's identity: only the latest applied Seq and
+// its reply; earlier entries are superseded because a clerk issues ops
+// sequentially.
+type dupEntry struct {
+	Seq int64
+	Rep any
+}
+
+// waiter is registered by Submit and resolved by the applier.
+type waiter struct {
+	seq int64
+	ch  chan any
+}
+
 type RSM struct {
 	mu           sync.Mutex
 	me           int
@@ -48,11 +62,10 @@ type RSM struct {
 	maxraftstate int // snapshot if log grows this big
 	sm           StateMachine
 
-	// duplicate table and waiters, keyed by op identity
-	results     map[string]any
-	waitCh      map[string]chan any
-	lastApplied    int
-	lastSnapIndex  int
+	dup           map[int64]dupEntry // clerk id -> latest seq + reply
+	waiters       map[string]*waiter // op key -> submitter
+	lastApplied   int
+	lastSnapIndex int
 }
 
 // servers[] contains the ports of the servers cooperating via Raft.
@@ -62,14 +75,15 @@ func MakeRSM(servers []*labrpc.ClientEnd, me int, persister *tester.Persister, m
 		maxraftstate: maxraftstate,
 		applyCh:      make(chan raftapi.ApplyMsg),
 		sm:           sm,
-		results:      map[string]any{},
-		waitCh:       map[string]chan any{},
+		dup:          map[int64]dupEntry{},
+		waiters:      map[string]*waiter{},
 	}
 	labgob.Register(Op{})
 	labgob.Register(kvrpc.TGetArgs{})
 	labgob.Register(kvrpc.TPutArgs{})
 	labgob.Register(kvrpc.TGetReply{})
 	labgob.Register(kvrpc.TPutReply{})
+	labgob.Register(dupEntry{})
 	if !tester.UseRaftStateMachine {
 		rsm.rf = raft.Make(servers, me, persister, rsm.applyCh)
 	}
@@ -110,17 +124,10 @@ func (rsm *RSM) newOp(req any) Op {
 }
 
 func opKey(op Op) string {
-	var b bytes.Buffer
 	if op.Cloned {
-		b.WriteString("c:")
-		b.WriteString(strconv.FormatInt(op.Ck, 10))
-		b.WriteString(":")
-		b.WriteString(strconv.FormatInt(op.Seq, 10))
-	} else {
-		b.WriteString("h:")
-		b.WriteString(strconv.FormatInt(op.Id, 10))
+		return "c:" + strconv.FormatInt(op.Ck, 10)
 	}
-	return b.String()
+	return "h:" + strconv.FormatInt(op.Id, 10)
 }
 
 // Submit a command to Raft, and wait for it to commit. It returns
@@ -129,29 +136,34 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 	op := rsm.newOp(req)
 	key := opKey(op)
 
+	w := &waiter{seq: op.Seq, ch: make(chan any, 1)}
 	for noLeader := 0; ; {
 		rsm.mu.Lock()
-		if rep, ok := rsm.results[key]; ok {
-			rsm.mu.Unlock()
-			return rpc.OK, rep
+		if op.Cloned {
+			if entry, ok := rsm.dup[op.Ck]; ok {
+				if entry.Seq == op.Seq {
+					rsm.mu.Unlock()
+					return rpc.OK, entry.Rep
+				}
+				// entry.Seq > op.Seq means this op was superseded; the
+				// submitter above it has moved on, so only waiters for
+				// the current seq are meaningful here.
+			}
 		}
-		ch := rsm.waitCh[key]
-		if ch == nil {
-			ch = make(chan any, 1)
-			rsm.waitCh[key] = ch
+		prev, registered := rsm.waiters[key]
+		if !registered || prev.seq > op.Seq {
+			rsm.waiters[key] = w
 		}
 		rsm.mu.Unlock()
 
 		_, _, isLeader := rsm.rf.Start(op)
 		if !isLeader {
-			// The op may still be committed by whoever replicated it;
-			// wait briefly for the applier before giving up this term.
 			noLeader++
 			if noLeader > 10 {
 				return rpc.ErrWrongLeader, nil
 			}
 			select {
-			case rep := <-ch:
+			case rep := <-w.ch:
 				return rpc.OK, rep
 			case <-time.After(60 * time.Millisecond):
 			}
@@ -159,10 +171,10 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 		}
 		noLeader = 0
 		select {
-		case rep := <-ch:
+		case rep := <-w.ch:
 			return rpc.OK, rep
 		case <-time.After(200 * time.Millisecond):
-			// Re-check leadership below via the following Start call.
+			// loop: re-verify leadership with the next Start call
 		}
 	}
 }
@@ -173,18 +185,7 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 func (rsm *RSM) applier() {
 	for msg := range rsm.applyCh {
 		if msg.SnapshotValid {
-			rsm.mu.Lock()
-			d := labgob.NewDecoder(bytes.NewBuffer(msg.Snapshot))
-			var results map[string]any
-			var kvBlob []byte
-			if d.Decode(&results) == nil && d.Decode(&kvBlob) == nil {
-				rsm.results = results
-				rsm.sm.Restore(kvBlob)
-			} else {
-				rsm.sm.Restore(msg.Snapshot)
-			}
-			rsm.lastApplied = msg.SnapshotIndex
-			rsm.mu.Unlock()
+			rsm.installSnapshot(msg.Snapshot, msg.SnapshotIndex)
 			continue
 		}
 		if !msg.CommandValid {
@@ -196,40 +197,77 @@ func (rsm *RSM) applier() {
 			continue
 		}
 		op, isOp := msg.Command.(Op)
+		rsm.lastApplied = msg.CommandIndex
+		rsm.lastSnapIndex = msg.CommandIndex
 		if !isOp {
-			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
-			rsm.lastApplied = msg.CommandIndex
 			rsm.mu.Unlock()
+			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
 			continue
 		}
 		key := opKey(op)
-		rep, seen := rsm.results[key]
-		if !seen {
+		var rep any
+		if op.Cloned {
+			entry, exists := rsm.dup[op.Ck]
+			switch {
+			case exists && entry.Seq == op.Seq:
+				rep = entry.Rep // replay: nothing to execute
+			case exists && entry.Seq > op.Seq:
+				rep = nil // superseded stale replay
+			default:
+				rep = rsm.sm.DoOp(op.Req)
+				rsm.dup[op.Ck] = dupEntry{Seq: op.Seq, Rep: rep}
+			}
+		} else {
 			rep = rsm.sm.DoOp(op.Req)
-			rsm.results[key] = rep
 		}
-		rsm.lastApplied = msg.CommandIndex
 		snap := rsm.maxraftstate > 0 && rsm.rf.PersistBytes() > rsm.maxraftstate
-		rsm.lastSnapIndex = msg.CommandIndex
-		waiter := rsm.waitCh[key]
+		// hand over the waiter that matches this seq
+		var notify *waiter
+		if w, ok := rsm.waiters[key]; ok && w.seq == op.Seq {
+			notify = w
+			delete(rsm.waiters, key)
+		}
 		rsm.mu.Unlock()
 
-		if waiter != nil {
+		if notify != nil && rep != nil {
 			select {
-			case waiter <- rep:
+			case notify.ch <- rep:
 			default:
 			}
 		}
 		if snap {
-			rsm.mu.Lock()
-			w := new(bytes.Buffer)
-			e := labgob.NewEncoder(w)
-			e.Encode(rsm.results)
-			e.Encode(rsm.sm.Snapshot())
-			blob := w.Bytes()
-			idx := rsm.lastSnapIndex
-			rsm.mu.Unlock()
-			rsm.rf.Snapshot(idx, blob)
+			rsm.takeSnapshot()
 		}
 	}
+}
+
+// installSnapshot feeds a leader-provided or persisted snapshot into
+// both the duplicate table and the service state machine.
+func (rsm *RSM) installSnapshot(blob []byte, index int) {
+	rsm.mu.Lock()
+	defer rsm.mu.Unlock()
+	d := labgob.NewDecoder(bytes.NewBuffer(blob))
+	var dup map[int64]dupEntry
+	var kvBlob []byte
+	if d.Decode(&dup) == nil && d.Decode(&kvBlob) == nil {
+		rsm.dup = dup
+		rsm.sm.Restore(kvBlob)
+	} else {
+		rsm.sm.Restore(blob)
+	}
+	rsm.lastApplied = index
+}
+
+// takeSnapshot writes {dup table, kv state} through raft so a restart
+// or an install reproduces both halves.
+func (rsm *RSM) takeSnapshot() {
+	rsm.mu.Lock()
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(rsm.dup)
+	e.Encode(rsm.sm.Snapshot())
+	blob := w.Bytes()
+	idx := rsm.lastSnapIndex
+	rsm.mu.Unlock()
+	rsm.rf.Snapshot(idx, blob)
 }
