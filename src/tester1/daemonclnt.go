@@ -30,6 +30,7 @@ var UseRaftStateMachine bool // to plug in another raft besided raft1
 // (tester or daemon) and aggregates the top stack-entry sites when it
 // balloons. [probe]
 func goroutineMonitor() {
+	label := filepath.Base(os.Args[0]) + " pid=" + strconv.Itoa(os.Getpid())
 	for {
 		time.Sleep(10 * time.Second)
 		n := runtime.NumGoroutine()
@@ -41,21 +42,32 @@ func goroutineMonitor() {
 		text := string(buf[:sz])
 		lines := strings.Split(text, "\n")
 		sites := map[string]int{}
-		pend := false
+		frames := 0
+		cur := ""
 		for _, ln := range lines {
 			if strings.HasPrefix(ln, "goroutine ") {
-				pend = true
+				sites[cur]++ // flush previous aggregate
+				cur = ""
+				frames = 0
 				continue
 			}
-			if pend && strings.HasPrefix(ln, "\t") {
-				site := strings.TrimSpace(ln)
-				if i := strings.LastIndex(site, "/"); i >= 0 {
-					site = site[i+1:]
+			if strings.HasPrefix(ln, "\t") {
+				if frames < 2 {
+					site := strings.TrimSpace(ln)
+					if i := strings.LastIndex(site, "/"); i >= 0 {
+						site = site[i+1:]
+					}
+					site = strings.Fields(site)[0]
+					if cur == "" {
+						cur = site
+					} else {
+						cur = cur + " <- " + site
+					}
+					frames++
 				}
-				sites[site]++
-				pend = false
 			}
 		}
+		sites[cur]++
 		type kv struct {
 			s string
 			c int
@@ -65,9 +77,9 @@ func goroutineMonitor() {
 			arr = append(arr, kv{s, c})
 		}
 		sort.Slice(arr, func(i, j int) bool { return arr[i].c > arr[j].c })
-		log.Printf("[gmon] goroutines=%v stackbytes=%v/%v top:", n, sz, len(buf))
+		log.Printf("[gmon %v] goroutines=%v stackbytes=%v/%v top:", label, n, sz, len(buf))
 		for i := 0; i < len(arr) && i < 14; i++ {
-			log.Printf("[gmon] %5v %v", arr[i].c, arr[i].s)
+			log.Printf("[gmon %v] %5v %v", label, arr[i].c, arr[i].s)
 		}
 	}
 }
