@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,9 +26,56 @@ import (
 var MaxRaftState int
 var UseRaftStateMachine bool // to plug in another raft besided raft1
 
+// goroutineMonitor samples the goroutine population of this process
+// (tester or daemon) and aggregates the top stack-entry sites when it
+// balloons. [probe]
+func goroutineMonitor() {
+	for {
+		time.Sleep(10 * time.Second)
+		n := runtime.NumGoroutine()
+		if n < 300 {
+			continue
+		}
+		buf := make([]byte, 8<<20)
+		sz := runtime.Stack(buf, true)
+		text := string(buf[:sz])
+		lines := strings.Split(text, "\n")
+		sites := map[string]int{}
+		pend := false
+		for _, ln := range lines {
+			if strings.HasPrefix(ln, "goroutine ") {
+				pend = true
+				continue
+			}
+			if pend && strings.HasPrefix(ln, "\t") {
+				site := strings.TrimSpace(ln)
+				if i := strings.LastIndex(site, "/"); i >= 0 {
+					site = site[i+1:]
+				}
+				sites[site]++
+				pend = false
+			}
+		}
+		type kv struct {
+			s string
+			c int
+		}
+		arr := []kv{}
+		for s, c := range sites {
+			arr = append(arr, kv{s, c})
+		}
+		sort.Slice(arr, func(i, j int) bool { return arr[i].c > arr[j].c })
+		log.Printf("[gmon] goroutines=%v stackbytes=%v/%v top:", n, sz, len(buf))
+		for i := 0; i < len(arr) && i < 14; i++ {
+			log.Printf("[gmon] %5v %v", arr[i].c, arr[i].s)
+		}
+	}
+}
+
 func init() {
 	flag.BoolVar(&UseRaftStateMachine, "raft-state-machine", false, "use raft state machine")
 	flag.IntVar(&MaxRaftState, "max-raft-state", -1, "max raft state")
+	go goroutineMonitor()
 }
 
 type DaemonClnt struct {
