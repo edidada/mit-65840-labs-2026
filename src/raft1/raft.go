@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"runtime"
 	"sync"
 	"time"
 
@@ -30,7 +31,7 @@ type LogRecord struct {
 
 // A Go object implementing a single Raft peer.
 type Raft struct {
-	mu        sync.Mutex          // Lock to protect shared access to this peer's state
+	mu        traceMu             // Lock to protect shared access to this peer's state
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
 	persister *tester.Persister   // Object to hold this peer's persisted state
 	dbg       time.Time           // trace throttle
@@ -70,6 +71,31 @@ const (
 	candidate = 1
 	leader    = 2
 )
+
+// traceMu dumps the holder's stack when one critical section runs
+// absurdly long (the r15 probes showed a single rf.mu holder starving
+// the applier for 40+s). [probe]
+type traceMu struct {
+	sync.Mutex
+	since time.Time
+}
+
+func (t *traceMu) Lock() {
+	t.Mutex.Lock()
+	t.since = time.Now()
+}
+
+func (t *traceMu) Unlock() {
+	if !t.since.IsZero() {
+		if d := time.Since(t.since); d > 5*time.Second {
+			buf := make([]byte, 8192)
+			n := runtime.Stack(buf, false)
+			log.Printf("[raft mu held %v by]\n%s", d.Truncate(time.Millisecond), buf[:n])
+		}
+	}
+	t.since = time.Time{}
+	t.Mutex.Unlock()
+}
 
 // return currentTerm and whether this server
 // believes it is the leader.
