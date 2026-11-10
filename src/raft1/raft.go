@@ -56,8 +56,9 @@ type Raft struct {
 	matchIndex []int
 
 	applyCh     chan raftapi.ApplyMsg
-	applyInt    chan raftapi.ApplyMsg
+	applyQ      []applyItem // pending messages, log-ordered; under rf.mu
 	applyEpoch  int
+	applyCond   *sync.Cond
 	electionEnd time.Time // reset whenever a valid message arrives
 	granted     int       // votes received in this term
 	leaderID    int
@@ -465,13 +466,12 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		return w.Bytes()
 	}(), args.Data)
 	// Tell the service and keep running.
-	now := rf.applyInt
-	now <- raftapi.ApplyMsg{
+	rf.applyPush(raftapi.ApplyMsg{
 		SnapshotValid: true,
 		Snapshot:      args.Data,
 		SnapshotTerm:  args.LastIncludedTerm,
 		SnapshotIndex: args.LastIncludedIndex,
-	}
+	})
 }
 
 // backupNextIndex repositions a follower's nextIndex after a rejection.
@@ -772,6 +772,25 @@ func (rf *Raft) sendVote(server, term, lastIdx, lastTrm int) {
 	}
 }
 
+// applyItem pairs a queued ApplyMsg with the queue epoch that produced
+// it, so an install-time queue reset can retire stale entries.
+type applyItem struct {
+	epoch int
+	msg   raftapi.ApplyMsg
+}
+
+// applyPush enqueues a message for the applier without ever blocking,
+// even while rf.mu is held. A bounded-channel send here deadlocked the
+// log-replay path: a follower whose commitIndex leapt forward (full log
+// replay after a crash) filled the buffer and blocked inside the
+// AppendEntries handler while holding rf.mu, and the applier, which
+// needs rf.mu, could never drain it again. rf.mu must be held by the
+// caller.
+func (rf *Raft) applyPush(msg raftapi.ApplyMsg) {
+	rf.applyQ = append(rf.applyQ, applyItem{epoch: rf.applyEpoch, msg: msg})
+	rf.applyCond.Signal()
+}
+
 // applyCommitted queues every committed-but-unapplied entry for the
 // dedicated applier goroutine, so the raft mutex is never held while a
 // possibly slow consumer drains applyCh.
@@ -782,52 +801,39 @@ func (rf *Raft) applyCommitted() {
 			break
 		}
 		rf.lastApplied++
-		cur := rf.applyInt
-		cur <- raftapi.ApplyMsg{
+		rf.applyPush(raftapi.ApplyMsg{
 			CommandValid: true,
 			Command:      rec.Command,
 			CommandIndex: rec.Index,
-		}
+		})
 	}
 }
 
 // applier forwards queued messages onto the service channel without
-// holding rf.mu. Epoch-aware: each snapshot install (service- or leader-
-// initiated) retires the previous queue so a stale CommandValid queued
-// before the install cannot reach the service out of order.
-func (rf *Raft) applier(epoch int) {
+// holding rf.mu. It is a single goroutine for the raft's lifetime; a
+// snapshot-install epoch bump may re-queue (or retire) entries, and
+// items carrying a retired epoch hop are skipped.
+func (rf *Raft) applier() {
 	for {
 		rf.mu.Lock()
-		if rf.applyEpoch != epoch {
-			rf.mu.Unlock()
-			return
+		for len(rf.applyQ) == 0 {
+			rf.applyCond.Wait()
 		}
-		ch := rf.applyInt
+		item := rf.applyQ[0]
+		rf.applyQ = rf.applyQ[1:]
+		cur := rf.applyEpoch
 		rf.mu.Unlock()
-		msg, ok := <-ch
-		if !ok {
-			return
+		if item.epoch != cur {
+			continue
 		}
-		rf.mu.Lock()
-		if rf.applyEpoch != epoch {
-			rf.mu.Unlock()
-			return
-		}
-		rf.mu.Unlock()
+		// The handoff can block on a slow consumer; rf.mu must NOT be
+		// held here or the leader/follower tickers and handlers seize up.
 		fs := time.Now()
-		rf.applyCh <- msg
+		rf.applyCh <- item.msg
 		if d := time.Since(fs); d > 100*time.Millisecond {
-			log.Printf("[raft fwd %v] blocked %v idx=%v", rf.me, d, msg.CommandIndex)
+			log.Printf("[raft fwd %v] blocked %v idx=%v", rf.me, d, item.msg.CommandIndex)
 		}
 	}
-}
-
-// resetApplyQueue retires every queued message and hands out a fresh
-// channel plus applier epoch.
-func (rf *Raft) resetApplyQueue() {
-	rf.applyEpoch++
-	rf.applyInt = make(chan raftapi.ApplyMsg, 8192)
-	go rf.applier(rf.applyEpoch)
 }
 
 func min(a, b int) int {
@@ -861,8 +867,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.lastIncludedIndex = 0
 	rf.lastIncludedTerm = 0
 	rf.granted = 0
-	rf.applyInt = make(chan raftapi.ApplyMsg, 8192)
 	rf.applyEpoch = 0
+	rf.applyCond = sync.NewCond(&rf.mu)
 	rf.resetElectionLocked()
 
 	// initialize from state persisted before a crash
@@ -872,16 +878,18 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// above the persisted prefix are replayed, so push a SnapshotValid
 	// first for the FSM to rebuild its duplicate table and state.
 	if blob := rf.persister.ReadSnapshot(); len(blob) > 0 && rf.lastIncludedIndex > 0 {
-		rf.applyInt <- raftapi.ApplyMsg{
+		rf.mu.Lock()
+		rf.applyPush(raftapi.ApplyMsg{
 			SnapshotValid: true,
 			Snapshot:      blob,
 			SnapshotTerm:  rf.lastIncludedTerm,
 			SnapshotIndex: rf.lastIncludedIndex,
-		}
+		})
+		rf.mu.Unlock()
 	}
 
 	go rf.ticker()
-	go rf.applier(rf.applyEpoch)
+	go rf.applier()
 
 	return rf
 }
