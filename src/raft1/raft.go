@@ -14,6 +14,7 @@ import (
 	"math/rand"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"6.5840/labgob"
@@ -76,9 +77,10 @@ const (
 // legitimate critical section should run. [probe]
 type traceMu struct {
 	sync.Mutex
-	since      time.Time
-	lastStack  string // stack of the most recent long holder, at Unlock
-	lastHold   time.Duration
+	since     time.Time
+	heldSince int64 // unix nanos, 0 = free; atomic [probe]
+	lastStack string
+	lastHold  time.Duration
 }
 
 func (t *traceMu) Lock() {
@@ -89,6 +91,7 @@ func (t *traceMu) Lock() {
 			d.Truncate(time.Millisecond), t.lastHold.Truncate(time.Millisecond), t.lastStack)
 	}
 	t.since = time.Now()
+	atomic.StoreInt64(&t.heldSince, t.since.UnixNano())
 }
 
 func (t *traceMu) Unlock() {
@@ -96,6 +99,7 @@ func (t *traceMu) Unlock() {
 	if !t.since.IsZero() {
 		d = time.Since(t.since)
 	}
+	atomic.StoreInt64(&t.heldSince, 0)
 	if d > 500*time.Millisecond {
 		buf := make([]byte, 8192)
 		n := runtime.Stack(buf, false)
@@ -104,6 +108,43 @@ func (t *traceMu) Unlock() {
 	}
 	t.since = time.Time{}
 	t.Mutex.Unlock()
+}
+
+// muWatch reports a raft mutex that has been held continuously for
+// more than heldWarn and dumps the whole process stack so the
+// un-released holder can be identified live. [probe]
+func (rf *Raft) muWatch(heldWarn time.Duration) {
+	reported := time.Time{}
+	for {
+		time.Sleep(2 * time.Second)
+		hs := atomic.LoadInt64(&rf.mu.heldSince)
+		if hs == 0 {
+			reported = time.Time{}
+			continue
+		}
+		held := time.Since(time.Unix(0, hs))
+		now := time.Now()
+		if held < heldWarn {
+			continue
+		}
+		if !reported.IsZero() && now.Sub(reported) < 10*time.Second {
+			continue
+		}
+		reported = now
+		log.Printf("[raft muwatch %v] rf.mu held %v, dumping all goroutines:",
+			rf.traceLabel(), held.Truncate(time.Second))
+		buf := make([]byte, 8<<20)
+		sz := runtime.Stack(buf, true)
+		log.Printf("[raft muwatch %v] dumpbegin %v bytes", rf.traceLabel(), sz)
+		// print in ~64KB chunks so long dumps are not truncated
+		for off := 0; off < sz; off += 1 << 16 {
+			end := off + 1<<16
+			if end > sz {
+				end = sz
+			}
+			log.Printf("[raft muwatch %v] chunk%d\n%s", rf.traceLabel(), off>>16, buf[off:end])
+		}
+	}
 }
 
 // return currentTerm and whether this server
@@ -951,6 +992,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	go rf.ticker()
 	go rf.applier()
+	go rf.muWatch(8 * time.Second) // [probe]
 
 	return rf
 }

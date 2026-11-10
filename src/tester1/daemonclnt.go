@@ -52,7 +52,7 @@ func goroutineMonitor() {
 				continue
 			}
 			if strings.HasPrefix(ln, "\t") {
-				if frames < 2 {
+				if frames < 5 {
 					site := strings.TrimSpace(ln)
 					if i := strings.LastIndex(site, "/"); i >= 0 {
 						site = site[i+1:]
