@@ -72,26 +72,35 @@ const (
 	leader    = 2
 )
 
-// traceMu dumps the holder's stack when one critical section runs
-// absurdly long (the r15 probes showed a single rf.mu holder starving
-// the applier for 40+s). [probe]
+// traceMu logs the unruly holder of a lock held far longer than any
+// legitimate critical section should run. [probe]
 type traceMu struct {
 	sync.Mutex
-	since time.Time
+	since      time.Time
+	lastStack  string // stack of the most recent long holder, at Unlock
+	lastHold   time.Duration
 }
 
 func (t *traceMu) Lock() {
+	st := time.Now()
 	t.Mutex.Lock()
+	if d := time.Since(st); d > 2*time.Second {
+		log.Printf("[raft mu waited %v after holder held %v by]:\n%s",
+			d.Truncate(time.Millisecond), t.lastHold.Truncate(time.Millisecond), t.lastStack)
+	}
 	t.since = time.Now()
 }
 
 func (t *traceMu) Unlock() {
+	var d time.Duration
 	if !t.since.IsZero() {
-		if d := time.Since(t.since); d > 5*time.Second {
-			buf := make([]byte, 8192)
-			n := runtime.Stack(buf, false)
-			log.Printf("[raft mu held %v by]\n%s", d.Truncate(time.Millisecond), buf[:n])
-		}
+		d = time.Since(t.since)
+	}
+	if d > 500*time.Millisecond {
+		buf := make([]byte, 8192)
+		n := runtime.Stack(buf, false)
+		t.lastStack = string(buf[:n])
+		t.lastHold = d
 	}
 	t.since = time.Time{}
 	t.Mutex.Unlock()
@@ -852,7 +861,8 @@ func (rf *Raft) applyCommitted() {
 // items carrying a retired epoch hop are skipped.
 func (rf *Raft) applier() {
 	for {
-		lst := time.Now() // [probe]
+		st := time.Now() // [probe]
+		lst := time.Now()
 		rf.mu.Lock()
 		if lag := time.Since(lst); lag > 2*time.Second { // [probe] lock competition
 			log.Printf("[raft ap %v] pop lock waited %v", rf.traceLabel(), lag.Truncate(time.Millisecond))
@@ -878,6 +888,11 @@ func (rf *Raft) applier() {
 		rf.applyCh <- item.msg
 		if d := time.Since(fs); d > 100*time.Millisecond {
 			log.Printf("[raft fwd %v] blocked %v idx=%v", rf.me, d, item.msg.CommandIndex)
+		}
+		if d := time.Since(st); d > 3*time.Second { // [probe] whole iteration slow
+			buf := make([]byte, 8192)
+			n := runtime.Stack(buf, false)
+			log.Printf("[raft ap %v] iter %v self:\n%s", rf.traceLabel(), d.Truncate(time.Millisecond), buf[:n])
 		}
 	}
 }
