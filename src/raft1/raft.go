@@ -383,7 +383,11 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	reply.Success = true
 	reply.ConflictIndex = rf.lastLogIndex() + 1
 	rf.commitIndexAtLeast(args.LeaderCommit)
+	pf := time.Now() // [probe]
 	rf.persist()
+	if d := time.Since(pf); d > time.Second { // [probe]
+		log.Printf("[raft g%v persist slow %v LL=%v commit=%v", rf.traceLabel(), d.Truncate(time.Millisecond), rf.lastLogIndex(), rf.commitIndex)
+	}
 	rf.applyCommitted()
 }
 
@@ -798,6 +802,13 @@ func (rf *Raft) applyCommitted() {
 	for rf.lastApplied < rf.commitIndex {
 		rec := rf.entryAt(rf.lastApplied + 1)
 		if rec == nil {
+			// [probe] a nil entry means the queue can never be filled past
+			// this point until lastApplied moves; log loudly.
+			if time.Since(rf.dbg) > time.Second {
+				rf.dbg = time.Now()
+				log.Printf("[raft g%v applybreak] lastApplied=%v commit=%v LL=%v missing=%v",
+					rf.traceLabel(), rf.lastApplied, rf.commitIndex, rf.lastLogIndex(), rf.lastApplied+1)
+			}
 			break
 		}
 		rf.lastApplied++
@@ -815,9 +826,18 @@ func (rf *Raft) applyCommitted() {
 // items carrying a retired epoch hop are skipped.
 func (rf *Raft) applier() {
 	for {
+		lst := time.Now() // [probe]
 		rf.mu.Lock()
+		if lag := time.Since(lst); lag > 2*time.Second { // [probe] lock competition
+			log.Printf("[raft ap %v] pop lock waited %v", rf.traceLabel(), lag.Truncate(time.Millisecond))
+		}
+		wst := time.Now() // [probe]
 		for len(rf.applyQ) == 0 {
 			rf.applyCond.Wait()
+		}
+		if lag := time.Since(wst); lag > 2*time.Second { // [probe] Wait wake-up delay
+			log.Printf("[raft ap %v] starved %v q=%v lastApplied=%v CI=%v LL=%v",
+				rf.traceLabel(), lag.Truncate(time.Millisecond), len(rf.applyQ), rf.lastApplied, rf.commitIndex, rf.lastLogIndex())
 		}
 		item := rf.applyQ[0]
 		rf.applyQ = rf.applyQ[1:]

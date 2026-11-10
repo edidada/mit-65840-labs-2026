@@ -328,13 +328,15 @@ func (rn *Network) processReq(req reqMsg) {
 		replyOK := false
 		serverDead := false
 		startT := time.Now()
+		logged := false // [labmon] once-per-request
 		for replyOK == false && serverDead == false {
 			select {
 			case reply = <-ech:
 				replyOK = true
 			case <-time.After(100 * time.Millisecond):
 				if serverDead = rn.isServerDead(req.endname, servername, server); !serverDead {
-					if d := time.Since(startT); d > 2*time.Second {
+					if d := time.Since(startT); d > 2*time.Second && !logged {
+						logged = true
 						log.Printf("[labmon] pending endname=%v server=%v method=%v for=%v",
 							req.endname, servername, req.svcMeth, d.Truncate(time.Second))
 					}
