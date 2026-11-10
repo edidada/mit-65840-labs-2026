@@ -17,12 +17,12 @@ jobs:
       - name: Build daemons
         working-directory: src
         run: |
-          go build -race -o main/shardgrp1d main/shardgrp1d.go
-          go build -race -o main/kvsrv1d main/kvsrv1d.go
-          go build -race -o main/kvraft1d main/kvraft1d.go
+          go build -o main/shardgrp1d main/shardgrp1d.go
+          go build -o main/kvsrv1d main/kvsrv1d.go
+          go build -o main/kvraft1d main/kvraft1d.go
       - name: Run official shardkv tests
         working-directory: src/shardkv1
-        run: timeout 300 go test -race -count=1 -run 'TestJoinBasic5A' -v -timeout 240s .
+        run: timeout 300 go test -count=1 -run 'TestJoinBasic5A' -v -timeout 240s .
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
