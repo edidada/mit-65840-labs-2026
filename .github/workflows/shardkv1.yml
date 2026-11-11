@@ -27,7 +27,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p ../../test-results
-          timeout 600 go test -race -count=3 -run '^TestJoinBasic5A$' -v -timeout 540s . 2>&1 | tee ../../test-results/shardkv.log
+          timeout 4800 go test -race -count=1 -v -timeout 75m ./... 2>&1 | tee ../../test-results/shardkv.log
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
