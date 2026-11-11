@@ -14,19 +14,24 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+          cache-dependency-path: src/go.sum
       - name: Build daemons
         working-directory: src
         run: |
-          go build -o main/shardgrp1d main/shardgrp1d.go
-          go build -o main/kvsrv1d main/kvsrv1d.go
-          go build -o main/kvraft1d main/kvraft1d.go
+          go build -race -o main/shardgrp1d main/shardgrp1d.go
+          go build -race -o main/kvsrv1d main/kvsrv1d.go
+          go build -race -o main/kvraft1d main/kvraft1d.go
       - name: Run official shardkv tests
         working-directory: src/shardkv1
-        run: timeout 300 go test -count=1 -run 'TestJoinBasic5A' -v -timeout 240s .
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ../../test-results
+          timeout 600 go test -race -count=3 -run '^TestJoinBasic5A$' -v -timeout 540s . 2>&1 | tee ../../test-results/shardkv.log
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: shardkv-results
-          path: src/shardkv1/*.go
+          path: test-results/
           if-no-files-found: warn
