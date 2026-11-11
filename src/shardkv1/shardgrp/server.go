@@ -300,7 +300,7 @@ func StartServerShardGrp(servers []*labrpc.ClientEnd, gid tester.Tgid, me int,
 	kv := &KVServer{me: me, gid: gid, shards: map[shardcfg.Tshid]*shard{}}
 	// The first group initializes itself owning every shard (config
 	// NumFirst) if this is truly a fresh start.
-	if gid == shardcfg.Gid1 && len(persister.ReadRaftState()) == 0 {
+	if gid == shardcfg.Gid1 {
 		for s := shardcfg.Tshid(0); s < shardcfg.NShards; s++ {
 			kv.shards[s] = &shard{
 				State: "active",
