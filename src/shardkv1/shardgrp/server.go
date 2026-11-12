@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"6.5840/kvraft1/rsm"
 	"6.5840/kvsrv1/rpc"
@@ -234,7 +235,7 @@ func decodeKV(state []byte) map[string]*kvRecord {
 }
 
 func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
-	err, rep := kv.rsm.Submit(args)
+	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
 	log.Printf("[shard g%v/%v] Get %v -> %v", kv.gid, kv.me, args.Key, err)
 	if err == rpc.OK {
 		*reply = rep.(rpc.GetReply)
@@ -244,7 +245,7 @@ func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
 }
 
 func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
-	err, rep := kv.rsm.Submit(args)
+	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
 	log.Printf("[shard g%v/%v] Put %v -> %v", kv.gid, kv.me, args.Key, err)
 	if err == rpc.OK {
 		*reply = rep.(rpc.PutReply)
@@ -256,7 +257,7 @@ func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
 // Freeze the specified shard (i.e., reject future Get/Puts for this
 // shard) and return the key/values stored in that shard.
 func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.FreezeShardReply) {
-	err, rep := kv.rsm.Submit(args)
+	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
 	log.Printf("[shard g%v/%v] FreezeShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.FreezeShardReply)
@@ -267,7 +268,7 @@ func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.
 
 // Install the supplied state for the specified shard.
 func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrpc.InstallShardReply) {
-	err, rep := kv.rsm.Submit(args)
+	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
 	log.Printf("[shard g%v/%v] InstallShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.InstallShardReply)
@@ -278,7 +279,7 @@ func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrp
 
 // Delete the specified shard.
 func (kv *KVServer) DeleteShard(args *shardrpc.DeleteShardArgs, reply *shardrpc.DeleteShardReply) {
-	err, rep := kv.rsm.Submit(args)
+	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
 	log.Printf("[shard g%v/%v] DeleteShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.DeleteShardReply)

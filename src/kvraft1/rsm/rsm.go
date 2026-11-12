@@ -150,6 +150,17 @@ func opKey(op Op) string {
 // Submit a command to Raft, and wait for it to commit. It returns
 // ErrWrongLeader if the caller should find a new leader and try again.
 func (rsm *RSM) Submit(req any) (rpc.Err, any) {
+	return rsm.submit(req, 0)
+}
+
+// SubmitWithTimeout lets an RPC handler bound a minority leader's response
+// time. Submit itself retains the Lab4A contract of waiting for leadership
+// to change or the command to commit.
+func (rsm *RSM) SubmitWithTimeout(req any, timeout time.Duration) (rpc.Err, any) {
+	return rsm.submit(req, timeout)
+}
+
+func (rsm *RSM) submit(req any, timeout time.Duration) (rpc.Err, any) {
 	op := rsm.newOp(req)
 	key := opKey(op)
 	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.who(), op.Id, op.Cloned, key)
@@ -178,15 +189,19 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 	// Bound waits on a partitioned leader. Never re-append a request
 	// here: the client retries, and the service's version/fence makes
 	// a late commit safe. Release the waiter on every return path.
-	deadline := time.NewTimer(800 * time.Millisecond)
-	defer deadline.Stop()
+	var deadline <-chan time.Time
+	if timeout > 0 {
+		timer := time.NewTimer(timeout)
+		defer timer.Stop()
+		deadline = timer.C
+	}
 	tick := time.NewTicker(50 * time.Millisecond)
 	defer tick.Stop()
 	for {
 		select {
 		case rep := <-w.ch:
 			return rpc.OK, rep
-		case <-deadline.C:
+		case <-deadline:
 			return rpc.ErrWrongLeader, nil
 		case <-tick.C:
 			nowTerm, nowLeader := rsm.rf.GetState()

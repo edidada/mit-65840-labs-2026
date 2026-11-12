@@ -6,6 +6,27 @@ on:
 permissions:
   contents: read
 jobs:
+  rsm-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: src/go.sum
+      - name: Run original RSM regression tests
+        working-directory: src
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ../test-results
+          timeout 1500 go test -race -count=1 -v -timeout 24m ./kvraft1/rsm 2>&1 | tee ../test-results/rsm.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rsm-regression-results
+          path: test-results/
   shardkv:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
