@@ -2,8 +2,8 @@ package shardgrp
 
 import (
 	"6.5840/kvsrv1/rpc"
-	"6.5840/shardkv1/shardgrp/shardrpc"
 	"6.5840/shardkv1/shardcfg"
+	"6.5840/shardkv1/shardgrp/shardrpc"
 	"6.5840/tester1"
 )
 
@@ -50,8 +50,15 @@ func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 			&args, &reply)
 		if ok {
 			switch reply.Err {
-			case rpc.OK, rpc.ErrNoKey, rpc.ErrWrongGroup:
+			case rpc.OK, rpc.ErrNoKey:
 				return reply.Err
+			case rpc.ErrWrongGroup:
+				if !first {
+					// An unanswered Put may have committed before the shard
+					// moved. Do not discard that ambiguity on a new group.
+					return rpc.ErrMaybe
+				}
+				return rpc.ErrWrongGroup
 			case rpc.ErrVersion:
 				if first {
 					return rpc.ErrVersion
