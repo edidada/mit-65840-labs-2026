@@ -155,57 +155,43 @@ func (rsm *RSM) Submit(req any) (rpc.Err, any) {
 	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.who(), op.Id, op.Cloned, key)
 
 	w := &waiter{seq: op.Seq, ch: make(chan any, 1)}
-	for noLeader := 0; ; {
-		rsm.mu.Lock()
-		if op.Cloned {
-			if entry, ok := rsm.dup[op.Ck]; ok {
-				if entry.Seq == op.Seq {
-					rsm.mu.Unlock()
-					return rpc.OK, entry.Rep
-				}
-				// entry.Seq > op.Seq means this op was superseded; the
-				// submitter above it has moved on, so only waiters for
-				// the current seq are meaningful here.
-			}
+	rsm.mu.Lock()
+	if op.Cloned {
+		if entry, ok := rsm.dup[op.Ck]; ok && entry.Seq == op.Seq {
+			rsm.mu.Unlock()
+			return rpc.OK, entry.Rep
 		}
-		prev, registered := rsm.waiters[key]
-		if !registered || prev.seq > op.Seq {
-			rsm.waiters[key] = w
+	}
+	rsm.waiters[key] = w
+	rsm.mu.Unlock()
+	defer func() {
+		rsm.mu.Lock()
+		if rsm.waiters[key] == w {
+			delete(rsm.waiters, key)
 		}
 		rsm.mu.Unlock()
-
-		idx, term, isl := rsm.rf.Start(op)
-		log.Printf("[rsm %v] Start %v idx=%v term=%v leader=%v", rsm.who(), op.Id, idx, term, isl)
-		if !isl {
-			noLeader++
-			if noLeader > 10 {
-				return rpc.ErrWrongLeader, nil
-			}
-			select {
-			case rep := <-w.ch:
-				return rpc.OK, rep
-			case <-time.After(60 * time.Millisecond):
-			}
-			continue
-		}
-		noLeader = 0
-		// The op is queued at the current term's leader. While
-		// leadership stays stable we must NOT re-append the same op:
-		// every duplicate Start floods the log (and the persisted
-		// state) and starves the applier. Keep waiting; re-Start only
-		// when the term or leadership changed, or after a long stall.
-		for stalls := 0; ; stalls++ {
-			select {
-			case rep := <-w.ch:
-				return rpc.OK, rep
-			case <-time.After(200 * time.Millisecond):
-			}
+	}()
+	_, term, leader := rsm.rf.Start(op)
+	if !leader {
+		return rpc.ErrWrongLeader, nil
+	}
+	// Bound waits on a partitioned leader. Never re-append a request
+	// here: the client retries, and the service's version/fence makes
+	// a late commit safe. Release the waiter on every return path.
+	deadline := time.NewTimer(800 * time.Millisecond)
+	defer deadline.Stop()
+	tick := time.NewTicker(50 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case rep := <-w.ch:
+			return rpc.OK, rep
+		case <-deadline.C:
+			return rpc.ErrWrongLeader, nil
+		case <-tick.C:
 			nowTerm, nowLeader := rsm.rf.GetState()
 			if !nowLeader || nowTerm != term {
-				break // re-queue via Start on the next outer round
-			}
-			if stalls%10 == 9 {
-				break // ~2s stall: bounded re-queue so progress survives pathological commits
+				return rpc.ErrWrongLeader, nil
 			}
 		}
 	}

@@ -105,27 +105,17 @@ func (sck *ShardCtrler) readNext() (*shardcfg.ShardConfig, rpc.Tversion) {
 
 // casNext writes val into the NEXT slot with the version of a fresh
 // read, retrying on races. val == "" clears the slot.
+// Claim only an empty slot at the version we actually observed. A failed
+// CAS is returned to the caller, which first helps the winning transition.
 func (sck *ShardCtrler) casNext(val string) rpc.Err {
-	for {
-		_, ver, err := sck.IKVClerk.Get(KEYNEXT)
-		var p rpc.Err = rpc.ErrVersion
-		switch err {
-		case rpc.OK:
-			p = sck.IKVClerk.Put(KEYNEXT, val, ver)
-		case rpc.ErrNoKey:
-			p = sck.IKVClerk.Put(KEYNEXT, val, 0)
-		default:
-			time.Sleep(slotPoll)
-			continue
-		}
-		if val == "" && err == rpc.ErrNoKey {
-			return rpc.OK // slot already empty
-		}
-		if p == rpc.OK {
-			return rpc.OK
-		}
-		time.Sleep(slotPoll)
+	value, ver, err := sck.IKVClerk.Get(KEYNEXT)
+	if err != rpc.OK && err != rpc.ErrNoKey {
+		return err
 	}
+	if value != "" {
+		return rpc.ErrVersion
+	}
+	return sck.IKVClerk.Put(KEYNEXT, val, ver)
 }
 
 // commitCur publishes pending into CUR with a versioned CAS. It
@@ -159,25 +149,22 @@ func (sck *ShardCtrler) commitCur(pending *shardcfg.ShardConfig) bool {
 // newer pending value stands and must survive).
 func (sck *ShardCtrler) clearNext(pending *shardcfg.ShardConfig) {
 	for {
-		value, _, err := sck.IKVClerk.Get(KEYNEXT)
+		value, ver, err := sck.IKVClerk.Get(KEYNEXT)
+		if err == rpc.ErrNoKey || value == "" {
+			return
+		}
 		if err != rpc.OK {
 			time.Sleep(slotPoll)
 			continue
 		}
-		if value == "" {
+		if value != pending.String() {
 			return
 		}
-		p := shardcfg.FromString(value)
-		if p.Num > pending.Num {
-			return // a newer pending appeared; leave it alone
-		}
-		if p.Num < pending.Num {
-			// stale residue; clear it too
-		}
-		if e := sck.casNext(""); e == rpc.OK || e == rpc.ErrNoKey {
+		if sck.IKVClerk.Put(KEYNEXT, "", ver) == rpc.OK {
 			return
 		}
-		time.Sleep(slotPoll)
+		// ErrMaybe needs a new read too: another helper may have advanced
+		// both CUR and NEXT. Never CAS using a newly read slot blindly.
 	}
 }
 
@@ -222,9 +209,12 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 			// delete at source (delete only after a confirmed install)
 			state, ferr := freezeServer(sck.clnt, srcServers, s, num)
 			log.Printf("[ctl %v] shard %d %v->%v freeze err=%v len=%d", sck.id, s, sg, dg, ferr, len(state))
-			installServer(sck.clnt, dstServers, s, state, num)
 			if ferr == rpc.OK {
-				deleteServer(sck.clnt, srcServers, s, num)
+				// A deleted source means another helper completed this move;
+				// do not install an empty state over the live destination.
+				if installServer(sck.clnt, dstServers, s, state, num) == rpc.OK {
+					deleteServer(sck.clnt, srcServers, s, num)
+				}
 			}
 			break
 		}

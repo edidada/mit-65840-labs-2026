@@ -22,7 +22,8 @@ type Clerk struct {
 	clnt *tester.Clnt
 	sck  *shardctrler.ShardCtrler
 
-	num  shardcfg.Tnum            // config num the rcks cache belongs to
+	cfg  *shardcfg.ShardConfig
+	num  shardcfg.Tnum // config num the rcks cache belongs to
 	rcks map[tester.Tgid]*shardgrp.Clerk
 }
 
@@ -48,9 +49,13 @@ func (ck *Clerk) GetClerk(gid tester.Tgid) (*shardgrp.Clerk, bool) {
 func (ck *Clerk) refresh(key string) (tester.Tgid, *shardgrp.Clerk) {
 	s := shardcfg.Key2Shard(key)
 	for {
-		cfg := ck.sck.Query()
+		if ck.cfg == nil {
+			ck.cfg = ck.sck.Query()
+		}
+		cfg := ck.cfg
 		gid := cfg.Shards[s]
 		if _, ok := cfg.Groups[gid]; !ok {
+			ck.cfg = nil
 			continue
 		}
 		if ck.num != cfg.Num {
@@ -72,6 +77,7 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 		_, rck := ck.refresh(key)
 		value, ver, err := rck.Get(key)
 		if err == rpc.ErrWrongGroup {
+			ck.cfg = nil
 			ck.num = 0 // force refresh next round
 			continue
 		}
@@ -85,6 +91,7 @@ func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 		_, rck := ck.refresh(key)
 		err := rck.Put(key, value, version)
 		if err == rpc.ErrWrongGroup {
+			ck.cfg = nil
 			ck.num = 0
 			continue
 		}

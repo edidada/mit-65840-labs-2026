@@ -126,7 +126,7 @@ func (kv *KVServer) doFreeze(args *shardrpc.FreezeShardArgs) any {
 	defer kv.mu.Unlock()
 	sh, ok := kv.shards[args.Shard]
 	switch {
-	case !ok, args.Num < sh.Num, args.Num == sh.Num && sh.State == "active":
+	case !ok, sh.State == "deleted", args.Num < sh.Num, args.Num == sh.Num && sh.State == "active":
 		// we don't own the shard as of this config number
 		return shardrpc.FreezeShardReply{Num: sh.frozenNum(ok, args.Num), Err: rpc.ErrWrongGroup}
 	default:
@@ -154,9 +154,9 @@ func (kv *KVServer) doInstall(args *shardrpc.InstallShardArgs) any {
 	if ok && args.Num < sh.Num {
 		return shardrpc.InstallShardReply{Err: rpc.ErrWrongGroup}
 	}
-	if ok && args.Num == sh.Num && len(args.State) == 0 {
-		// idempotent re-install after a confirm lost in the network
-		sh.State = "active"
+	if ok && args.Num == sh.Num {
+		// An install retry must never overwrite newer writes or revive a
+		// shard that has since been frozen/deleted at the same fence.
 		return shardrpc.InstallShardReply{Err: rpc.OK}
 	}
 	nsh := &shard{State: "active", Num: args.Num, KV: decodeKV(args.State)}
@@ -181,7 +181,10 @@ func (kv *KVServer) doDelete(args *shardrpc.DeleteShardArgs) any {
 	case sh.State != "frozen":
 		return shardrpc.DeleteShardReply{Err: rpc.ErrWrongGroup}
 	default:
-		delete(kv.shards, args.Shard)
+		// Retain the fence so a delayed Install cannot resurrect old data.
+		sh.State = "deleted"
+		sh.Num = args.Num
+		sh.KV = nil
 		return shardrpc.DeleteShardReply{Err: rpc.OK}
 	}
 }
