@@ -40,8 +40,8 @@ type Raft struct {
 	me        int                 // this peer's index into peers[]
 
 	// 3A: persistent state (Figure 2 "Persistent state on all servers")
-	currentTerm int   // latest term server has seen
-	votedFor    int   // candidateId that received vote in current term (-1 none)
+	currentTerm int         // latest term server has seen
+	votedFor    int         // candidateId that received vote in current term (-1 none)
 	log         []LogRecord // entry 0 is a sentinel covering the snapshot prefix
 
 	// snapshot prefix (3D)
@@ -64,8 +64,7 @@ type Raft struct {
 	electionEnd time.Time // reset whenever a valid message arrives
 	granted     int       // votes received in this term
 	leaderID    int
-
-	}
+}
 
 const (
 	follower  = 0
@@ -781,7 +780,11 @@ func (rf *Raft) ticker() {
 			rf.dispatchAppendAll(term)
 		}
 
-		ms := 25 + (rand.Int63() % 25)
+		// Idle heartbeats need not compete with client operations every
+		// 25ms. Start still dispatches new log entries immediately. Keep
+		// periodic traffic at at most ten rounds/second per group, which
+		// matters when many shard groups share the RPC transport.
+		ms := 100 + (rand.Int63() % 25)
 		time.Sleep(time.Duration(ms) * time.Millisecond)
 	}
 }
@@ -839,7 +842,7 @@ func (rf *Raft) sendVote(server, term, lastIdx, lastTrm int) {
 	}
 	if rf.granted*2 > len(rf.peers) {
 		rf.state = leader
-			rf.leaderID = rf.me
+		rf.leaderID = rf.me
 		rf.nextIndex = make([]int, len(rf.peers))
 		rf.matchIndex = make([]int, len(rf.peers))
 		for i := range rf.nextIndex {
@@ -962,7 +965,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.applyCh = applyCh
 	rf.state = follower
 	rf.votedFor = -1
-		rf.leaderID = -1
+	rf.leaderID = -1
 	rf.currentTerm = 0
 	rf.commitIndex = 0
 	rf.lastApplied = 0
