@@ -43,6 +43,13 @@ jobs:
           go build -race -o main/shardgrp1d main/shardgrp1d.go
           go build -race -o main/kvsrv1d main/kvsrv1d.go
           go build -race -o main/kvraft1d main/kvraft1d.go
+      - name: Run targeted migration regressions
+        working-directory: src
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ../test-results
+          timeout 180 go test -race -count=1 -v -timeout 150s -run '^(TestRetiredGroupCacheRefresh|TestMigrationReplayFences)$' ./shardkv1 ./shardkv1/shardgrp 2>&1 | tee ../test-results/migration-regressions.log
       - name: Run official shardkv tests
         working-directory: src/shardkv1
         shell: bash
