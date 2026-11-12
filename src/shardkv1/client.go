@@ -10,6 +10,7 @@ package shardkv
 
 import (
 	"6.5840/shardkv1/shardgrp"
+	"time"
 
 	"6.5840/kvsrv1/rpc"
 	"6.5840/kvtest1"
@@ -76,7 +77,7 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 	for {
 		_, rck := ck.refresh(key)
 		value, ver, err := rck.Get(key)
-		if err == rpc.ErrWrongGroup {
+		if err == rpc.ErrWrongGroup || err == rpc.ErrWrongLeader {
 			ck.cfg = nil
 			ck.num = 0 // force refresh next round
 			continue
@@ -87,13 +88,19 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 
 // Put a key to a shard group.
 func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
+	uncertain := false
 	for {
 		_, rck := ck.refresh(key)
 		err := rck.Put(key, value, version)
-		if err == rpc.ErrWrongGroup {
+		if err == rpc.ErrWrongGroup || err == rpc.ErrWrongLeader {
+			uncertain = uncertain || err == rpc.ErrWrongLeader
 			ck.cfg = nil
 			ck.num = 0
+			time.Sleep(10 * time.Millisecond)
 			continue
+		}
+		if uncertain && err == rpc.ErrVersion {
+			return rpc.ErrMaybe
 		}
 		return err
 	}

@@ -16,6 +16,8 @@ RSM非leader立即返回，退出时清理自己的waiter；Submit保留Lab4A要
 
 客户端缓存配置，仅ErrWrongGroup后重新查询；Put的重试如遇迁移，保留ErrMaybe语义。分片相同配置号的重复安装不覆盖已应用数据；删除后保留配置号墓碑，并随快照恢复。更新配置号的合法迁移仍能重新取得分片。
 
+后续静态检查发现缓存还必须处理分片组已退出、无法回复ErrWrongGroup的情况。分片组Clerk每轮最多尝试全部服务器一次，无明确回复时返回内部ErrWrongLeader；顶层Clerk重新查询配置并重试，跨轮Put仍保留不确定性。迁移RPC同样按轮返回，控制器在重试间核对NEXT，已完成或被替代的迁移不再追踪已退出的组。TestRetiredGroupCacheRefresh显式先缓存新组地址、完成leave并退出该组，再验证同一Clerk读取原键成功；原始23项继续保留。
+
 NEXT只在读取到空槽时用该版本尝试占用；失败后帮助已有迁移。清理时同时核对内容并CAS该次读取的版本。源Freeze返回ErrWrongGroup时不安装空数据；成功安装后才删除源。
 
 ## 验证与证据边界

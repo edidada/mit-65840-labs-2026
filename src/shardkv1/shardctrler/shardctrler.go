@@ -183,7 +183,7 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 		for {
 			// re-check the slot per attempt: a newer pending means the
 			// newer controller redoes the remaining moves.
-			if slot, _ := sck.readNext(); slot != nil && slot.Num > pending.Num {
+			if slot, _ := sck.readNext(); slot == nil || slot.Num != pending.Num {
 				return
 			}
 			if dg == 0 || !dstOK {
@@ -193,9 +193,15 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 				}
 				switch _, ferr0 := freezeServer(sck.clnt, srcServers, s, num); ferr0 {
 				case rpc.OK:
-					deleteServer(sck.clnt, srcServers, s, num)
+					if err := deleteServer(sck.clnt, srcServers, s, num); err == rpc.ErrWrongLeader {
+						time.Sleep(movePoll)
+						continue
+					}
 				case rpc.ErrWrongGroup:
 					// nothing left there to freeze
+				default:
+					time.Sleep(movePoll)
+					continue
 				}
 				break
 			}
@@ -209,11 +215,21 @@ func (sck *ShardCtrler) doMoves(cur *shardcfg.ShardConfig, pending *shardcfg.Sha
 			// delete at source (delete only after a confirmed install)
 			state, ferr := freezeServer(sck.clnt, srcServers, s, num)
 			log.Printf("[ctl %v] shard %d %v->%v freeze err=%v len=%d", sck.id, s, sg, dg, ferr, len(state))
+			if ferr == rpc.ErrWrongLeader {
+				time.Sleep(movePoll)
+				continue
+			}
 			if ferr == rpc.OK {
-				// A deleted source means another helper completed this move;
-				// do not install an empty state over the live destination.
-				if installServer(sck.clnt, dstServers, s, state, num) == rpc.OK {
-					deleteServer(sck.clnt, srcServers, s, num)
+				ierr := installServer(sck.clnt, dstServers, s, state, num)
+				if ierr == rpc.ErrWrongLeader {
+					time.Sleep(movePoll)
+					continue
+				}
+				if ierr == rpc.OK {
+					if deleteServer(sck.clnt, srcServers, s, num) == rpc.ErrWrongLeader {
+						time.Sleep(movePoll)
+						continue
+					}
 				}
 			}
 			break

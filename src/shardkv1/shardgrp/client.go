@@ -26,7 +26,7 @@ func (ck *Clerk) Leader() int {
 }
 
 func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
-	for {
+	for attempts := 0; attempts < len(ck.servers); attempts++ {
 		args := rpc.GetArgs{Key: key}
 		var reply rpc.GetReply
 		ok := ck.Clnt.Call(ck.servers[ck.leader], "KVServer.Get",
@@ -39,11 +39,12 @@ func (ck *Clerk) Get(key string) (string, rpc.Tversion, rpc.Err) {
 		}
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
+	return "", 0, rpc.ErrWrongLeader
 }
 
 func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 	first := true
-	for {
+	for attempts := 0; attempts < len(ck.servers); attempts++ {
 		args := rpc.PutArgs{Key: key, Value: value, Version: version}
 		var reply rpc.PutReply
 		ok := ck.Clnt.Call(ck.servers[ck.leader], "KVServer.Put",
@@ -69,12 +70,13 @@ func (ck *Clerk) Put(key string, value string, version rpc.Tversion) rpc.Err {
 		first = false
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
+	return rpc.ErrWrongLeader
 }
 
 // FreezeShard stops the shard at the source group and returns its
 // state. ErrMaybe is not needed here: repeats are fenced by Num.
 func (ck *Clerk) FreezeShard(s shardcfg.Tshid, num shardcfg.Tnum) ([]byte, rpc.Err) {
-	for {
+	for attempts := 0; attempts < len(ck.servers); attempts++ {
 		args := shardrpc.FreezeShardArgs{Shard: s, Num: num}
 		var reply shardrpc.FreezeShardReply
 		ok := ck.Clnt.Call(ck.servers[ck.leader], "KVServer.FreezeShard", &args, &reply)
@@ -83,10 +85,11 @@ func (ck *Clerk) FreezeShard(s shardcfg.Tshid, num shardcfg.Tnum) ([]byte, rpc.E
 		}
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
+	return nil, rpc.ErrWrongLeader
 }
 
 func (ck *Clerk) InstallShard(s shardcfg.Tshid, state []byte, num shardcfg.Tnum) rpc.Err {
-	for {
+	for attempts := 0; attempts < len(ck.servers); attempts++ {
 		args := shardrpc.InstallShardArgs{Shard: s, State: state, Num: num}
 		var reply shardrpc.InstallShardReply
 		ok := ck.Clnt.Call(ck.servers[ck.leader], "KVServer.InstallShard", &args, &reply)
@@ -95,10 +98,11 @@ func (ck *Clerk) InstallShard(s shardcfg.Tshid, state []byte, num shardcfg.Tnum)
 		}
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
+	return rpc.ErrWrongLeader
 }
 
 func (ck *Clerk) DeleteShard(s shardcfg.Tshid, num shardcfg.Tnum) rpc.Err {
-	for {
+	for attempts := 0; attempts < len(ck.servers); attempts++ {
 		args := shardrpc.DeleteShardArgs{Shard: s, Num: num}
 		var reply shardrpc.DeleteShardReply
 		ok := ck.Clnt.Call(ck.servers[ck.leader], "KVServer.DeleteShard", &args, &reply)
@@ -107,4 +111,5 @@ func (ck *Clerk) DeleteShard(s shardcfg.Tshid, num shardcfg.Tnum) rpc.Err {
 		}
 		ck.leader = (ck.leader + 1) % len(ck.servers)
 	}
+	return rpc.ErrWrongLeader
 }
