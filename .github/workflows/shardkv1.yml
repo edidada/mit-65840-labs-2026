@@ -50,6 +50,12 @@ jobs:
           set -o pipefail
           mkdir -p ../test-results
           timeout 180 go test -race -count=1 -v -timeout 150s -run '^(TestRetiredGroupCacheRefresh|TestMigrationReplayFences)$' ./shardkv1 ./shardkv1/shardgrp 2>&1 | tee ../test-results/migration-regressions.log
+      - name: Repeat original stable-shard progress regression
+        working-directory: src/shardkv1
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout 180 go test -race -count=3 -v -timeout 150s -run '^TestProgressJoin5A$' . 2>&1 | tee ../../test-results/progress-regression.log
       - name: Run official shardkv tests
         working-directory: src/shardkv1
         shell: bash

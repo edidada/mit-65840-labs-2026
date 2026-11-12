@@ -5,6 +5,7 @@ import (
 	crand "crypto/rand"
 	"log"
 	"math/big"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"6.5840/raftapi"
 	"6.5840/tester1"
 )
+
+var traceRequests = os.Getenv("MIT65840_TRACE_REQUESTS") == "1"
 
 // Op is one command flowing through Raft. Requests that carry a clerk
 // identity (lab 4B get/put) dedup on (Ck, Seq); other requests (lab 4A
@@ -163,7 +166,9 @@ func (rsm *RSM) SubmitWithTimeout(req any, timeout time.Duration) (rpc.Err, any)
 func (rsm *RSM) submit(req any, timeout time.Duration) (rpc.Err, any) {
 	op := rsm.newOp(req)
 	key := opKey(op)
-	log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.who(), op.Id, op.Cloned, key)
+	if traceRequests {
+		log.Printf("[rsm %v] Submit %v cloned=%v key=%v", rsm.who(), op.Id, op.Cloned, key)
+	}
 
 	w := &waiter{seq: op.Seq, ch: make(chan any, 1)}
 	rsm.mu.Lock()
@@ -244,7 +249,9 @@ func (rsm *RSM) applier() {
 			log.Printf("applier: non-Op command at index %v", msg.CommandIndex)
 			continue
 		}
-		log.Printf("[rsm %v] applied idx=%v id=%v cloned=%v", rsm.who(), msg.CommandIndex, op.Id, op.Cloned)
+		if traceRequests {
+			log.Printf("[rsm %v] applied idx=%v id=%v cloned=%v", rsm.who(), msg.CommandIndex, op.Id, op.Cloned)
+		}
 		key := opKey(op)
 		var rep any
 		if op.Cloned {

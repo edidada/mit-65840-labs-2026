@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -15,6 +16,8 @@ import (
 	"6.5840/shardkv1/shardgrp/shardrpc"
 	"6.5840/tester1"
 )
+
+var traceRequests = os.Getenv("MIT65840_TRACE_REQUESTS") == "1"
 
 const (
 	ENVKEY = "65840ENV"
@@ -236,7 +239,9 @@ func decodeKV(state []byte) map[string]*kvRecord {
 
 func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
 	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
-	log.Printf("[shard g%v/%v] Get %v -> %v", kv.gid, kv.me, args.Key, err)
+	if traceRequests {
+		log.Printf("[shard g%v/%v] Get %v -> %v", kv.gid, kv.me, args.Key, err)
+	}
 	if err == rpc.OK {
 		*reply = rep.(rpc.GetReply)
 		return
@@ -246,7 +251,9 @@ func (kv *KVServer) Get(args *rpc.GetArgs, reply *rpc.GetReply) {
 
 func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
 	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
-	log.Printf("[shard g%v/%v] Put %v -> %v", kv.gid, kv.me, args.Key, err)
+	if traceRequests {
+		log.Printf("[shard g%v/%v] Put %v -> %v", kv.gid, kv.me, args.Key, err)
+	}
 	if err == rpc.OK {
 		*reply = rep.(rpc.PutReply)
 		return
@@ -258,7 +265,9 @@ func (kv *KVServer) Put(args *rpc.PutArgs, reply *rpc.PutReply) {
 // shard) and return the key/values stored in that shard.
 func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.FreezeShardReply) {
 	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
-	log.Printf("[shard g%v/%v] FreezeShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	if traceRequests {
+		log.Printf("[shard g%v/%v] FreezeShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	}
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.FreezeShardReply)
 		return
@@ -269,7 +278,9 @@ func (kv *KVServer) FreezeShard(args *shardrpc.FreezeShardArgs, reply *shardrpc.
 // Install the supplied state for the specified shard.
 func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrpc.InstallShardReply) {
 	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
-	log.Printf("[shard g%v/%v] InstallShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	if traceRequests {
+		log.Printf("[shard g%v/%v] InstallShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	}
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.InstallShardReply)
 		return
@@ -280,7 +291,9 @@ func (kv *KVServer) InstallShard(args *shardrpc.InstallShardArgs, reply *shardrp
 // Delete the specified shard.
 func (kv *KVServer) DeleteShard(args *shardrpc.DeleteShardArgs, reply *shardrpc.DeleteShardReply) {
 	err, rep := kv.rsm.SubmitWithTimeout(args, 800*time.Millisecond)
-	log.Printf("[shard g%v/%v] DeleteShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	if traceRequests {
+		log.Printf("[shard g%v/%v] DeleteShard shard=%v num=%v -> err=%v", kv.gid, kv.me, args.Shard, args.Num, err)
+	}
 	if err == rpc.OK {
 		*reply = rep.(shardrpc.DeleteShardReply)
 		return
