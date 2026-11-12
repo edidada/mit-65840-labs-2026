@@ -21,6 +21,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p ../test-results
+          go build -race -o main/rsm1d main/rsm1d.go
           timeout 1500 go test -race -count=1 -v -timeout 24m ./kvraft1/rsm 2>&1 | tee ../test-results/rsm.log
       - uses: actions/upload-artifact@v4
         if: always()
